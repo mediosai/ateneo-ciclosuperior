@@ -17,12 +17,16 @@ function showSection(name) {
 navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.section)));
 navToggle.addEventListener('click', () => mainNav.classList.toggle('open'));
 
-// Logo/nombre del colegio: vuelve al inicio (arriba de todo, pestaña Posiciones)
+// Logo/nombre del colegio: vuelve al inicio.
+// El enlace apunta a index.html, asi que aunque este JS no llegue a
+// cargar (cache vieja, error de red), tocarlo igual vuelve al home.
+// Con el JS activo evitamos la recarga y hacemos la vuelta suave.
 document.getElementById('brandLink').addEventListener('click', (e) => {
   e.preventDefault();
   mainNav.classList.remove('open');
   sections.forEach(s => s.classList.toggle('active', s.id === 'sec-posiciones'));
   navButtons.forEach(b => b.classList.toggle('active', b.dataset.section === 'posiciones'));
+  if (location.hash) history.replaceState(null, '', location.pathname);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
