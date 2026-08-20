@@ -1,5 +1,5 @@
 /* =========================================================
-   Torneo Ciclo Superior — Casa Salesiana Juan Segundo Fernández
+   Torneo Ciclo Superior - Casa Salesiana Juan Segundo Fernández
    ========================================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
@@ -624,7 +624,7 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
 }
 
 /* =========================================================
-   Movimiento reducido — respeta la preferencia del sistema
+   Movimiento reducido - respeta la preferencia del sistema
    ========================================================= */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

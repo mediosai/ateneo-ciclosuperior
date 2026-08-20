@@ -223,7 +223,7 @@ async function loadAnnouncements() {
 }
 
 /* ============================================================
-   Inscripción — Auth por mail institucional
+   Inscripción - Auth por mail institucional
    ============================================================ */
 const authAlert = document.getElementById('authAlert');
 function showAlert(el, type, msg) {
