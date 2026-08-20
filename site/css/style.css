@@ -146,24 +146,30 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 22px;
 }
 
-/* ---------------- Suspension banner ---------------- */
-.banner {
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height .5s var(--ease);
-  background: linear-gradient(90deg, var(--red), var(--red-dark));
+/* ---------------- Avisos en la portada ---------------- */
+.portada-avisos {
+  background: var(--navy);
 }
-.banner.show { max-height: 120px; }
-.banner-inner {
+.portada-avisos[hidden] { display: none; }
+.portada-avisos-inner {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 12px 24px;
+  padding: 14px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.portada-aviso-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  animation: fadeSlideIn .4s var(--ease);
 }
-.banner-icon {
+.portada-aviso-item.suspension { background: linear-gradient(90deg, var(--red), var(--red-dark)); }
+.portada-aviso-item.info { background: linear-gradient(90deg, var(--blue), var(--blue-dark)); }
+.portada-aviso-icon {
   font-size: 20px;
   animation: pulse 1.6s ease-in-out infinite;
   flex-shrink: 0;
@@ -172,9 +178,9 @@ button { font-family: inherit; cursor: pointer; }
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.15); opacity: .75; }
 }
-.banner-text { flex: 1; font-size: 14px; }
-.banner-text strong { display: block; font-size: 14.5px; margin-bottom: 2px; }
-.banner-close {
+.portada-aviso-text { flex: 1; font-size: 14px; color: #fff; }
+.portada-aviso-text strong { display: block; font-size: 14.5px; margin-bottom: 2px; }
+.portada-aviso-close {
   background: rgba(255,255,255,.15);
   border: none;
   color: #fff;
@@ -183,7 +189,7 @@ button { font-family: inherit; cursor: pointer; }
   flex-shrink: 0;
   transition: background .2s;
 }
-.banner-close:hover { background: rgba(255,255,255,.3); }
+.portada-aviso-close:hover { background: rgba(255,255,255,.3); }
 
 /* ---------------- Portada / carrusel ---------------- */
 .cover-carousel {
@@ -711,7 +717,7 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
   .session-chip { flex-wrap: wrap; }
 
   /* Superficie táctil mínima recomendada */
-  .btn, .main-nav button, .team-chip, .banner-close, .remove-player { min-height: 44px; }
+  .btn, .main-nav button, .team-chip, .portada-aviso-close, .remove-player { min-height: 44px; }
   .btn-sm { min-height: 38px; }
 
   .announce-item { padding: 12px; }
@@ -735,7 +741,7 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
     scroll-behavior: auto !important;
   }
   .section.active { animation: none; }
-  .banner-icon { animation: none; }
+  .portada-aviso-icon { animation: none; }
   .skeleton { animation: none; background: var(--surface-2); }
   .brand:hover .brand-logo { transform: none; }
   .btn:active, .team-chip:active, .main-nav button:active { transform: none; }

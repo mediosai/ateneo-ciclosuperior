@@ -104,30 +104,45 @@ async function loadCoverCarousel() {
 }
 
 /* ============================================================
-   Aviso de suspensión (banner)
+   Avisos en la portada (duran 224 horas desde su creación)
    ============================================================ */
-async function loadBanner() {
+const AVISO_HORAS_VIGENCIA = 224;
+
+async function loadPortadaAvisos() {
   const { data } = await supabase
     .from('announcements')
     .select('*')
-    .eq('kind', 'suspension')
-    .order('created_at', { ascending: false })
-    .limit(1);
+    .order('created_at', { ascending: false });
 
-  const banner = document.getElementById('suspensionBanner');
-  if (data && data.length) {
-    const a = data[0];
+  const wrap = document.getElementById('portadaAvisos');
+  const inner = document.getElementById('portadaAvisosInner');
+
+  const vigentes = (data || []).filter(a => {
     const hoursOld = (Date.now() - new Date(a.created_at).getTime()) / 36e5;
-    if (hoursOld < 24 * 10 && !sessionStorage.getItem(`dismissed-${a.id}`)) {
-      document.getElementById('bannerTitle').textContent = a.title;
-      document.getElementById('bannerMessage').textContent = a.message;
-      banner.classList.add('show');
-      document.getElementById('bannerClose').onclick = () => {
-        banner.classList.remove('show');
-        sessionStorage.setItem(`dismissed-${a.id}`, '1');
-      };
-    }
-  }
+    return hoursOld < AVISO_HORAS_VIGENCIA && !sessionStorage.getItem(`dismissed-${a.id}`);
+  });
+
+  if (!vigentes.length) { wrap.hidden = true; inner.innerHTML = ''; return; }
+
+  inner.innerHTML = vigentes.map(a => `
+    <div class="portada-aviso-item ${a.kind}" data-id="${a.id}">
+      <span class="portada-aviso-icon">${a.kind === 'suspension' ? '🌧️' : 'ℹ️'}</span>
+      <div class="portada-aviso-text">
+        <strong>${a.title}</strong>
+        ${a.message}
+      </div>
+      <button class="portada-aviso-close" aria-label="Cerrar aviso" data-id="${a.id}">✕</button>
+    </div>`).join('');
+
+  inner.querySelectorAll('.portada-aviso-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      sessionStorage.setItem(`dismissed-${btn.dataset.id}`, '1');
+      btn.closest('.portada-aviso-item').remove();
+      if (!inner.querySelector('.portada-aviso-item')) wrap.hidden = true;
+    });
+  });
+
+  wrap.hidden = false;
 }
 
 /* ============================================================
@@ -229,70 +244,6 @@ async function loadScorers() {
 }
 
 /* ============================================================
-   Planteles
-   ============================================================ */
-async function loadRosterTeams() {
-  const { data: teams } = await supabase.from('teams').select('id,name,course').order('name');
-  const chipsEl = document.getElementById('teamChips');
-  const rosterBadge = document.getElementById('rosterBadge');
-  rosterBadge.textContent = `${teams?.length || 0} equipo${(teams?.length || 0) === 1 ? '' : 's'}`;
-
-  if (!teams || !teams.length) {
-    chipsEl.innerHTML = '';
-    document.getElementById('rosterContainer').innerHTML = `<div class="empty-state"><div class="icon-big">👥</div>Todavía no hay equipos inscriptos.</div>`;
-    return;
-  }
-
-  chipsEl.innerHTML = teams.map((t, i) => `<button class="team-chip${i === 0 ? ' active' : ''}" data-team="${t.id}">${t.name}</button>`).join('');
-  chipsEl.querySelectorAll('.team-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      chipsEl.querySelectorAll('.team-chip').forEach(c => c.classList.remove('active'));
-      chip.classList.add('active');
-      loadRosterFor(chip.dataset.team, chip.textContent);
-    });
-  });
-  loadRosterFor(teams[0].id, teams[0].name);
-}
-
-async function loadRosterFor(teamId, name) {
-  const el = document.getElementById('rosterContainer');
-  el.innerHTML = `<div class="skeleton" style="height:120px"></div>`;
-  const { data: players } = await supabase.from('players').select('*').eq('team_id', teamId).order('last_name');
-  if (!players || !players.length) {
-    el.innerHTML = `<div class="empty-state"><div class="icon-big">🧑‍🤝‍🧑</div>${name} todavía no cargó jugadores.</div>`;
-    return;
-  }
-  el.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>#</th><th>Apellido</th><th>Nombre</th><th>Curso</th></tr></thead>
-        <tbody>
-          ${players.map((p, i) => `<tr><td data-label="#">${i + 1}</td><td class="team-name" data-label="Apellido">${p.last_name}</td><td data-label="Nombre">${p.first_name}</td><td data-label="Curso">${p.course}</td></tr>`).join('')}
-        </tbody>
-      </table>
-    </div>`;
-}
-
-/* ============================================================
-   Avisos
-   ============================================================ */
-async function loadAnnouncements() {
-  const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
-  const el = document.getElementById('announceContainer');
-  document.getElementById('announceBadge').textContent = `${data?.length || 0}`;
-  if (!data || !data.length) { el.innerHTML = `<div class="empty-state"><div class="icon-big">📣</div>No hay avisos publicados.</div>`; return; }
-  el.innerHTML = data.map(a => `
-    <div class="announce-item ${a.kind}">
-      <span class="icon">${a.kind === 'suspension' ? '🌧️' : 'ℹ️'}</span>
-      <div>
-        <strong>${a.title}</strong>
-        ${a.message}
-        <div class="when">${new Date(a.created_at).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}${a.matchday ? ' · Fecha ' + a.matchday : ''}</div>
-      </div>
-    </div>`).join('');
-}
-
-/* ============================================================
    Inscripción - Auth por mail institucional
    ============================================================ */
 const authAlert = document.getElementById('authAlert');
@@ -378,7 +329,7 @@ async function renderTeamPanel(session) {
       });
       if (error) { showAlert(alertEl, 'error', 'Error al crear el equipo: ' + error.message); return; }
       renderTeamPanel(session);
-      loadStandings(); loadRosterTeams();
+      loadStandings();
     });
     return;
   }
@@ -424,14 +375,12 @@ async function renderPlayersPanel(team) {
     const { error } = await supabase.from('players').insert({ team_id: team.id, first_name, last_name, course });
     if (error) { showAlert(alertEl, 'error', 'Error al agregar: ' + error.message); return; }
     renderPlayersPanel(team);
-    loadRosterTeams();
   });
 
   container.querySelectorAll('.remove-player').forEach(btn => {
     btn.addEventListener('click', async () => {
       await supabase.from('players').delete().eq('id', btn.dataset.player);
       renderPlayersPanel(team);
-      loadRosterTeams();
     });
   });
 }
@@ -441,12 +390,10 @@ async function renderPlayersPanel(team) {
    ============================================================ */
 async function boot() {
   loadCoverCarousel();
-  loadBanner();
+  loadPortadaAvisos();
   loadStandings();
   loadMatches();
   loadScorers();
-  loadRosterTeams();
-  loadAnnouncements();
 
   const { data: { session } } = await supabase.auth.getSession();
   renderAuthState(session);

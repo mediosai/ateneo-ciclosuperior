@@ -25,20 +25,8 @@
       <button data-section="resultados">Resultados</button>
       <button data-section="fixture">Fixture</button>
       <button data-section="goleadores">Goleadores</button>
-      <button data-section="planteles">Planteles</button>
-      <button data-section="avisos">Avisos</button>
       <button data-section="inscripcion">Inscripción</button>
     </nav>
-  </div>
-  <div class="banner" id="suspensionBanner">
-    <div class="banner-inner">
-      <span class="banner-icon">🌧️</span>
-      <div class="banner-text">
-        <strong id="bannerTitle"></strong>
-        <span id="bannerMessage"></span>
-      </div>
-      <button class="banner-close" id="bannerClose" aria-label="Cerrar aviso">✕</button>
-    </div>
   </div>
 </header>
 
@@ -52,6 +40,10 @@
   <button class="carousel-arrow prev" id="carouselPrev" aria-label="Foto anterior" hidden>‹</button>
   <button class="carousel-arrow next" id="carouselNext" aria-label="Foto siguiente" hidden>›</button>
   <div class="carousel-dots" id="carouselDots"></div>
+</section>
+
+<section class="portada-avisos" id="portadaAvisos" hidden>
+  <div class="portada-avisos-inner" id="portadaAvisosInner"></div>
 </section>
 
 <section class="hero">
@@ -102,32 +94,6 @@
     </div>
     <div id="scorersContainer">
       <div class="skeleton" style="height:180px"></div>
-    </div>
-  </section>
-
-  <!-- ===================== PLANTELES ===================== -->
-  <section class="section panel" id="sec-planteles">
-    <div class="section-title">
-      <h2>👥 Planteles</h2>
-      <span class="badge" id="rosterBadge">-</span>
-    </div>
-    <div class="team-chips" id="teamChips"></div>
-    <div id="rosterContainer">
-      <div class="empty-state">
-        <div class="icon-big">👈</div>
-        Elegí un equipo para ver su plantel.
-      </div>
-    </div>
-  </section>
-
-  <!-- ===================== AVISOS ===================== -->
-  <section class="section panel" id="sec-avisos">
-    <div class="section-title">
-      <h2>📣 Avisos del torneo</h2>
-      <span class="badge" id="announceBadge">-</span>
-    </div>
-    <div id="announceContainer" class="announce-list">
-      <div class="skeleton" style="height:60px"></div>
     </div>
   </section>
 
