@@ -142,7 +142,7 @@ async function loadPortadaAvisos() {
       <span class="portada-aviso-icon">${a.kind === 'suspension' ? '🌧️' : 'ℹ️'}</span>
       <div class="portada-aviso-text">
         <strong>${a.title}</strong>
-        ${a.message}
+        ${a.message || ''}
       </div>
       <button class="portada-aviso-close" aria-label="Cerrar aviso" data-id="${a.id}">✕</button>
     </div>`).join('');

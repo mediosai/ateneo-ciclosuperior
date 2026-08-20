@@ -76,7 +76,7 @@ async function loadAdminAnnouncements() {
     <div class="announce-item ${a.kind}">
       <span class="icon">${a.kind === 'suspension' ? '🌧️' : 'ℹ️'}</span>
       <div style="flex:1">
-        <strong>${a.title}</strong>${a.message}
+        <strong>${a.title}</strong>${a.message || ''}
         <div class="when">${new Date(a.created_at).toLocaleString('es-AR')}${a.matchday ? ' · Fecha ' + a.matchday : ''}</div>
       </div>
       <button class="btn btn-outline btn-sm" data-del-ann="${a.id}">Borrar</button>
@@ -91,14 +91,12 @@ async function loadAdminAnnouncements() {
 document.getElementById('publishAnnBtn').addEventListener('click', async () => {
   const kind = document.getElementById('annKind').value;
   const title = document.getElementById('annTitle').value.trim();
-  const message = document.getElementById('annMessage').value.trim();
   const alertEl = document.getElementById('annAlert');
-  if (!title || !message) { showAlert(alertEl, 'error', 'Completá título y mensaje.'); return; }
-  const { error } = await supabase.from('announcements').insert({ kind, title, message });
+  if (!title) { showAlert(alertEl, 'error', 'Completá el título del aviso.'); return; }
+  const { error } = await supabase.from('announcements').insert({ kind, title });
   if (error) { showAlert(alertEl, 'error', error.message); return; }
   showAlert(alertEl, 'success', 'Aviso publicado.');
   document.getElementById('annTitle').value = '';
-  document.getElementById('annMessage').value = '';
   loadAdminAnnouncements();
 });
 

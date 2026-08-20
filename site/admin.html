@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Panel Organizadores · Torneo Ciclo Superior</title>
 <link rel="icon" href="assets/logo.png" />
-<link rel="stylesheet" href="css/style.css?v=6" />
+<link rel="stylesheet" href="css/style.css?v=7" />
 </head>
 <body>
 
@@ -67,37 +67,11 @@
             <label for="annTitle">Título</label>
             <input id="annTitle" placeholder="Ej: Se suspende la fecha 4 por lluvia" />
           </div>
-          <div class="form-row">
-            <label for="annMessage">Mensaje</label>
-            <input id="annMessage" placeholder="Detalle para los equipos" />
-          </div>
           <button class="btn btn-primary" id="publishAnnBtn">Publicar aviso</button>
         </div>
         <div class="alert" id="annAlert"></div>
         <h4 style="margin-top:22px;">Avisos publicados</h4>
         <div id="adminAnnList" class="announce-list"></div>
-      </section>
-
-      <!-- Portada / carrusel de fotos -->
-      <section class="panel">
-        <div class="section-title"><h2>📸 Portada - carrusel de fotos</h2><span class="badge" id="photosCountBadge">-</span></div>
-        <p style="color:var(--text-dim); font-size:13.5px; margin-top:-8px;">Las fotos que subas acá aparecen en el carrusel de la portada, en el orden de esta lista.</p>
-        <div class="form-grid">
-          <div class="two-col">
-            <div class="form-row">
-              <label for="photoFile">Foto (JPG, PNG o WEBP, máx. 20MB)</label>
-              <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" />
-            </div>
-            <div class="form-row">
-              <label for="photoCaption">Epígrafe (opcional)</label>
-              <input id="photoCaption" placeholder="Ej: Final Ciclo Superior 2025" />
-            </div>
-          </div>
-          <button class="btn btn-primary" id="uploadPhotoBtn">Subir foto</button>
-        </div>
-        <div class="alert" id="photoAlert"></div>
-        <h4 style="margin-top:22px;">Fotos cargadas</h4>
-        <div id="adminPhotosList" class="match-grid"></div>
       </section>
 
       <!-- Equipos inscriptos -->
@@ -156,6 +130,28 @@
         <div id="adminMatchesList"></div>
       </section>
 
+      <!-- Portada / carrusel de fotos -->
+      <section class="panel">
+        <div class="section-title"><h2>📸 Portada - carrusel de fotos</h2><span class="badge" id="photosCountBadge">-</span></div>
+        <p style="color:var(--text-dim); font-size:13.5px; margin-top:-8px;">Las fotos que subas acá aparecen en el carrusel de la portada, en el orden de esta lista.</p>
+        <div class="form-grid">
+          <div class="two-col">
+            <div class="form-row">
+              <label for="photoFile">Foto (JPG, PNG o WEBP, máx. 20MB)</label>
+              <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" />
+            </div>
+            <div class="form-row">
+              <label for="photoCaption">Epígrafe (opcional)</label>
+              <input id="photoCaption" placeholder="Ej: Final Ciclo Superior 2025" />
+            </div>
+          </div>
+          <button class="btn btn-primary" id="uploadPhotoBtn">Subir foto</button>
+        </div>
+        <div class="alert" id="photoAlert"></div>
+        <h4 style="margin-top:22px;">Fotos cargadas</h4>
+        <div id="adminPhotosList" class="match-grid"></div>
+      </section>
+
     </div>
 
     <div style="text-align:center; margin: 8px 0 24px;">
@@ -165,8 +161,6 @@
 
 </main>
 
-<footer class="app-footer">Panel privado - solo organizadores del torneo.</footer>
-
-<script type="module" src="js/admin.js?v=6"></script>
+<script type="module" src="js/admin.js?v=7"></script>
 </body>
 </html>
