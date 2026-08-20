@@ -513,13 +513,97 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
     top: 68px; left: 0; right: 0;
     background: var(--navy);
     flex-direction: column;
+    flex-wrap: nowrap;
     padding: 8px 16px 16px;
     max-height: 0;
     overflow: hidden;
     transition: max-height .4s var(--ease);
     z-index: 40;
+    box-shadow: var(--shadow);
   }
-  .main-nav.open { max-height: 420px; }
-  .main-nav button { text-align: left; width: 100%; }
+  .main-nav.open { max-height: min(420px, calc(100vh - 68px)); overflow-y: auto; flex-wrap: nowrap; }
+  .main-nav button { text-align: left; width: 100%; padding: 12px 14px; }
   .nav-toggle { display: block; }
+}
+
+/* =========================================================
+   Optimización para móviles
+   ========================================================= */
+@supports (padding: max(0px)) {
+  .header-inner, .app-footer, .hero, .container { padding-left: max(24px, env(safe-area-inset-left)); padding-right: max(24px, env(safe-area-inset-right)); }
+}
+
+@media (max-width: 640px) {
+  .header-inner { padding: 10px 16px; gap: 10px; }
+  .brand-logo { width: 38px; height: 38px; }
+  .brand-school { font-size: 10px; }
+  .brand-name { font-size: 15px; }
+  .nav-toggle { font-size: 24px; padding: 6px 8px; }
+
+  .hero { padding: 34px 16px 56px; }
+  .hero .pill { font-size: 11.5px; padding: 5px 12px; }
+  .hero p { font-size: 13.5px; }
+
+  .container { padding: 0 14px; margin-top: -32px; }
+  .panel { padding: 18px 16px; border-radius: 14px; margin-bottom: 18px; }
+  .section-title h2 { font-size: 18px; }
+
+  .match-grid { grid-template-columns: 1fr; gap: 12px; }
+  .two-col { gap: 12px; }
+
+  /* Tablas: de filas horizontales a tarjetas apiladas */
+  .table-wrap table { min-width: 0; }
+  .table-wrap thead { display: none; }
+  .table-wrap tbody tr {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    background: var(--surface);
+  }
+  .table-wrap tbody tr:hover { background: var(--surface); }
+  .table-wrap tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--border);
+    white-space: normal;
+    text-align: right;
+  }
+  .table-wrap tbody td:last-child { border-bottom: none; }
+  .table-wrap tbody td::before {
+    content: attr(data-label);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--text-dim);
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .table-wrap tbody td.team-name { font-weight: 700; font-size: 15px; }
+
+  .player-row { grid-template-columns: 1fr; gap: 8px; }
+  .remove-player { width: 100%; height: 40px; }
+
+  .team-chips { gap: 6px; }
+  .team-chip { padding: 7px 12px; font-size: 12.5px; }
+
+  .session-chip { flex-wrap: wrap; }
+
+  /* Superficie táctil mínima recomendada */
+  .btn, .main-nav button, .team-chip, .banner-close, .remove-player { min-height: 44px; }
+  .btn-sm { min-height: 38px; }
+
+  .announce-item { padding: 12px; }
+  .match-card { padding: 14px; }
+  .match-score { font-size: 17px; min-width: 54px; }
+}
+
+@media (max-width: 380px) {
+  .brand-school { display: none; }
+  .hero h1 { font-size: 22px; }
 }

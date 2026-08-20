@@ -120,7 +120,7 @@ async function loadAdminTeams() {
   else {
     el.innerHTML = `<table>
       <thead><tr><th>Equipo</th><th>Curso</th><th>Capitán</th><th>Inscripto</th></tr></thead>
-      <tbody>${TEAMS.map(t => `<tr><td>${t.name}</td><td>${t.course}</td><td>${t.captain_email}</td><td>${new Date(t.created_at).toLocaleDateString('es-AR')}</td></tr>`).join('')}</tbody>
+      <tbody>${TEAMS.map(t => `<tr><td class="team-name" data-label="Equipo">${t.name}</td><td data-label="Curso">${t.course}</td><td data-label="Capitán">${t.captain_email}</td><td data-label="Inscripto">${new Date(t.created_at).toLocaleDateString('es-AR')}</td></tr>`).join('')}</tbody>
     </table>`;
   }
   fillTeamSelects();

@@ -80,12 +80,12 @@ async function loadStandings() {
         <tbody>
           ${data.map((t, i) => `
             <tr>
-              <td><span class="pos-num">${i + 1}</span></td>
-              <td class="team-name">${t.name}</td>
-              <td>${t.course}</td>
-              <td>${t.pj}</td><td>${t.pg}</td><td>${t.pe}</td><td>${t.pp}</td>
-              <td>${t.gf}</td><td>${t.gc}</td><td>${t.dg > 0 ? '+' + t.dg : t.dg}</td>
-              <td class="pts-cell">${t.pts}</td>
+              <td data-label="#"><span class="pos-num">${i + 1}</span></td>
+              <td class="team-name" data-label="Equipo">${t.name}</td>
+              <td data-label="Curso">${t.course}</td>
+              <td data-label="PJ">${t.pj}</td><td data-label="PG">${t.pg}</td><td data-label="PE">${t.pe}</td><td data-label="PP">${t.pp}</td>
+              <td data-label="GF">${t.gf}</td><td data-label="GC">${t.gc}</td><td data-label="DG">${t.dg > 0 ? '+' + t.dg : t.dg}</td>
+              <td class="pts-cell" data-label="Pts">${t.pts}</td>
             </tr>`).join('')}
         </tbody>
       </table>
@@ -147,11 +147,11 @@ async function loadScorers() {
         <tbody>
           ${data.map((p, i) => `
             <tr>
-              <td><span class="pos-num">${i + 1}</span></td>
-              <td>${p.first_name} ${p.last_name}</td>
-              <td>${p.course}</td>
-              <td>${p.team_name}</td>
-              <td class="pts-cell">${p.goals}</td>
+              <td data-label="#"><span class="pos-num">${i + 1}</span></td>
+              <td class="team-name" data-label="Jugador/a">${p.first_name} ${p.last_name}</td>
+              <td data-label="Curso">${p.course}</td>
+              <td data-label="Equipo">${p.team_name}</td>
+              <td class="pts-cell" data-label="Goles">${p.goals}</td>
             </tr>`).join('')}
         </tbody>
       </table>
@@ -197,7 +197,7 @@ async function loadRosterFor(teamId, name) {
       <table>
         <thead><tr><th>#</th><th>Apellido</th><th>Nombre</th><th>Curso</th></tr></thead>
         <tbody>
-          ${players.map((p, i) => `<tr><td>${i + 1}</td><td>${p.last_name}</td><td>${p.first_name}</td><td>${p.course}</td></tr>`).join('')}
+          ${players.map((p, i) => `<tr><td data-label="#">${i + 1}</td><td class="team-name" data-label="Apellido">${p.last_name}</td><td data-label="Nombre">${p.first_name}</td><td data-label="Curso">${p.course}</td></tr>`).join('')}
         </tbody>
       </table>
     </div>`;
