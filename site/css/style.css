@@ -514,14 +514,19 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
     background: var(--navy);
     flex-direction: column;
     flex-wrap: nowrap;
-    padding: 8px 16px 16px;
+    padding: 0 16px;
     max-height: 0;
     overflow: hidden;
-    transition: max-height .4s var(--ease);
+    transition: max-height .4s var(--ease), padding .3s var(--ease);
     z-index: 40;
     box-shadow: var(--shadow);
   }
-  .main-nav.open { max-height: min(420px, calc(100vh - 68px)); overflow-y: auto; flex-wrap: nowrap; }
+  .main-nav.open {
+    max-height: min(420px, calc(100vh - 68px));
+    overflow-y: auto;
+    flex-wrap: nowrap;
+    padding: 8px 16px 16px;
+  }
   .main-nav button { text-align: left; width: 100%; padding: 12px 14px; }
   .nav-toggle { display: block; }
 }
