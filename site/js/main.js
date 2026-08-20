@@ -12,7 +12,6 @@ function showSection(name) {
   sections.forEach(s => s.classList.toggle('active', s.id === `sec-${name}`));
   navButtons.forEach(b => b.classList.toggle('active', b.dataset.section === name));
   mainNav.classList.remove('open');
-  document.getElementById('appFooter').style.display = name === 'posiciones' ? '' : 'none';
   window.scrollTo({ top: document.querySelector('.hero').nextElementSibling.offsetTop - 90, behavior: 'smooth' });
 }
 navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.section)));
@@ -27,7 +26,6 @@ document.getElementById('brandLink').addEventListener('click', (e) => {
   mainNav.classList.remove('open');
   sections.forEach(s => s.classList.toggle('active', s.id === 'sec-posiciones'));
   navButtons.forEach(b => b.classList.toggle('active', b.dataset.section === 'posiciones'));
-  document.getElementById('appFooter').style.display = '';
   if (location.hash) history.replaceState(null, '', location.pathname);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });

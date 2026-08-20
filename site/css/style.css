@@ -128,7 +128,7 @@ button { font-family: inherit; cursor: pointer; }
   gap: 4px;
   flex-wrap: wrap;
 }
-.main-nav button {
+.main-nav button, .main-nav a {
   background: transparent;
   border: none;
   color: #d7deec;
@@ -138,14 +138,16 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: 999px;
   transition: background .25s var(--ease), color .25s var(--ease), transform .2s var(--ease);
   position: relative;
+  display: inline-block;
 }
-.main-nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
-.main-nav button:active { transform: scale(.97); transition: transform .1s ease-out; }
+.main-nav button:hover, .main-nav a:hover { background: rgba(255,255,255,.08); color: #fff; }
+.main-nav button:active, .main-nav a:active { transform: scale(.97); transition: transform .1s ease-out; }
 .main-nav button.active {
   background: var(--gold);
   color: var(--navy);
   font-weight: 700;
 }
+.main-nav .nav-admin-link { color: #b9c3da; }
 .nav-toggle {
   display: none;
   background: transparent;
@@ -797,7 +799,8 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
     flex-wrap: nowrap;
     padding: 8px 16px 16px;
   }
-  .main-nav button { text-align: left; width: 100%; padding: 12px 14px; }
+  .main-nav button, .main-nav a { text-align: left; width: 100%; padding: 12px 14px; }
+  .main-nav .nav-admin-link { border-top: 1px solid rgba(255,255,255,.12); margin-top: 6px; padding-top: 16px; }
   .nav-toggle { display: block; }
 }
 
@@ -870,7 +873,7 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
   .session-chip { flex-wrap: wrap; }
 
   /* Superficie táctil mínima recomendada */
-  .btn, .main-nav button, .team-chip, .portada-aviso-close, .remove-player { min-height: 44px; }
+  .btn, .main-nav button, .main-nav a, .team-chip, .portada-aviso-close, .remove-player { min-height: 44px; }
   .btn-sm { min-height: 38px; }
 
   .announce-item { padding: 12px; }
@@ -897,7 +900,7 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
   .portada-aviso-icon { animation: none; }
   .skeleton { animation: none; background: var(--surface-2); }
   .brand:hover .brand-logo { transform: none; }
-  .btn:active, .team-chip:active, .main-nav button:active { transform: none; }
+  .btn:active, .team-chip:active, .main-nav button:active, .main-nav a:active { transform: none; }
   .match-card:hover, .announce-item:hover { transform: none; }
 }
 
