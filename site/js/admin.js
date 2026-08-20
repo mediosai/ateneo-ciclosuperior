@@ -42,7 +42,6 @@ async function checkAdminAndBoot(session) {
   }
   loginPanel.style.display = 'none';
   dashboard.style.display = '';
-  document.getElementById('adminEmailChip').textContent = session.user.email;
 
   const { data: adminRow } = await supabase.from('admins').select('*').eq('user_id', session.user.id).maybeSingle();
 
