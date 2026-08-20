@@ -6,7 +6,7 @@
 <title>Torneo Ciclo Superior · Casa Salesiana Juan Segundo Fernández</title>
 <meta name="description" content="Torneo de fútbol escolar de Ciclo Superior - Casa Salesiana Juan Segundo Fernández, Obra de Don Bosco." />
 <link rel="icon" href="assets/logo.png" />
-<link rel="stylesheet" href="css/style.css?v=7" />
+<link rel="stylesheet" href="css/style.css?v=8" />
 </head>
 <body id="top">
 
@@ -21,7 +21,7 @@
     </a>
     <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
     <nav class="main-nav" id="mainNav">
-      <button data-section="posiciones" class="active">Posiciones</button>
+      <button data-section="tabla">Posiciones</button>
       <button data-section="resultados">Resultados</button>
       <button data-section="fixture">Fixture</button>
       <button data-section="goleadores">Premios</button>
@@ -62,6 +62,17 @@
     </div>
     <div id="standingsContainer">
       <div class="skeleton" style="height:180px"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TABLA COMPLETA ===================== -->
+  <section class="section panel" id="sec-tabla">
+    <div class="section-title">
+      <h2>🏆 Tabla de posiciones</h2>
+      <span class="badge" id="fullStandingsBadge">-</span>
+    </div>
+    <div id="fullStandingsContainer">
+      <div class="skeleton" style="height:220px"></div>
     </div>
   </section>
 
@@ -141,6 +152,6 @@
 
 </main>
 
-<script type="module" src="js/main.js?v=7"></script>
+<script type="module" src="js/main.js?v=8"></script>
 </body>
 </html>

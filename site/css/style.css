@@ -460,6 +460,30 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ---------------- Tables ---------------- */
 .table-wrap { overflow-x: auto; border-radius: 12px; }
+
+/* ---------------- Tabla completa (doble entrada) ---------------- */
+.full-standings { min-width: 560px; }
+.full-standings th, .full-standings td { text-align: center; }
+.full-standings th.col-pos, .full-standings td.col-pos { width: 42px; }
+.full-standings th.col-team, .full-standings td.col-team {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: var(--surface);
+  z-index: 1;
+  min-width: 150px;
+}
+.full-standings thead th.col-team { z-index: 2; }
+.full-standings tbody tr:hover td.col-team { background: var(--surface-2); }
+.full-standings .ft-name { display: block; font-weight: 700; font-size: 14px; }
+.full-standings .ft-course { display: block; font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+.full-standings tbody td { padding: 10px 8px; }
+.table-legend {
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
 table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 480px; }
 thead th {
   text-align: left;
@@ -927,6 +951,26 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
     flex-shrink: 0;
   }
   .table-wrap tbody td.team-name { font-weight: 700; font-size: 15px; }
+
+  /* La tabla completa NO colapsa a tarjetas: se lee como grilla con scroll */
+  .grid-table table { min-width: 560px; }
+  .grid-table thead { display: table-header-group; }
+  .grid-table tbody tr {
+    display: table-row;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+  }
+  .grid-table tbody td {
+    display: table-cell;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .grid-table tbody td::before { content: none; }
 
   .player-row { grid-template-columns: 1fr; gap: 8px; }
   .remove-player { width: 100%; height: 40px; }

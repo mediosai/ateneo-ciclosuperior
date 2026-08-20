@@ -164,10 +164,23 @@ async function loadPortadaAvisos() {
 async function loadStandings() {
   const { data, error } = await supabase.from('standings').select('*');
   const el = document.getElementById('standingsContainer');
-  if (error || !data) { el.innerHTML = `<div class="empty-state">No se pudo cargar la tabla.</div>`; return; }
-  document.getElementById('standingsBadge').textContent = `${data.length} equipo${data.length === 1 ? '' : 's'}`;
-  if (!data.length) { el.innerHTML = `<div class="empty-state"><div class="icon-big">🗒️</div>Todavía no hay equipos inscriptos.</div>`; return; }
+  const fullEl = document.getElementById('fullStandingsContainer');
 
+  if (error || !data) {
+    el.innerHTML = fullEl.innerHTML = `<div class="empty-state">No se pudo cargar la tabla.</div>`;
+    return;
+  }
+
+  const count = `${data.length} equipo${data.length === 1 ? '' : 's'}`;
+  document.getElementById('standingsBadge').textContent = count;
+  document.getElementById('fullStandingsBadge').textContent = count;
+
+  if (!data.length) {
+    el.innerHTML = fullEl.innerHTML = `<div class="empty-state"><div class="icon-big">🗒️</div>Todavía no hay equipos inscriptos.</div>`;
+    return;
+  }
+
+  // Home: versión resumida, solo el orden
   el.innerHTML = `
     <div class="table-wrap">
       <table class="standings-table">
@@ -185,6 +198,46 @@ async function loadStandings() {
         </tbody>
       </table>
     </div>`;
+
+  // Pestaña Posiciones: tabla completa de doble entrada
+  fullEl.innerHTML = `
+    <div class="table-wrap grid-table">
+      <table class="full-standings">
+        <thead>
+          <tr>
+            <th class="col-pos">#</th>
+            <th class="col-team">Equipo</th>
+            <th title="Puntos">Pts</th>
+            <th title="Partidos jugados">PJ</th>
+            <th title="Partidos ganados">PG</th>
+            <th title="Partidos empatados">PE</th>
+            <th title="Partidos perdidos">PP</th>
+            <th title="Goles a favor">GF</th>
+            <th title="Goles en contra">GC</th>
+            <th title="Diferencia de goles">DG</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((t, i) => `
+            <tr>
+              <td class="col-pos"><span class="pos-num">${i + 1}</span></td>
+              <td class="col-team">
+                <span class="ft-name">${t.name}</span>
+                <span class="ft-course">${t.course}</span>
+              </td>
+              <td class="pts-cell">${t.pts}</td>
+              <td>${t.pj}</td>
+              <td>${t.pg}</td>
+              <td>${t.pe}</td>
+              <td>${t.pp}</td>
+              <td>${t.gf}</td>
+              <td>${t.gc}</td>
+              <td>${t.dg > 0 ? '+' + t.dg : t.dg}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    <p class="table-legend">Pts: puntos · PJ: jugados · PG: ganados · PE: empatados · PP: perdidos · GF: goles a favor · GC: goles en contra · DG: diferencia</p>`;
 }
 
 /* ============================================================
