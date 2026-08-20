@@ -797,6 +797,19 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
 }
 .drill-back:hover { text-decoration: underline; }
 
+/* ---------------- Contador de goleadores cargados ---------------- */
+.goals-progress { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.goal-chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+.goal-chip.full { background: rgba(31, 157, 85, .16); color: var(--success); }
+.goal-chip.pending { background: rgba(240, 180, 41, .18); color: var(--gold-dark); }
+
 /* ---------------- Fotos (admin) ---------------- */
 .photo-card { padding: 0; overflow: hidden; }
 .photo-card img { width: 100%; height: 140px; object-fit: cover; display: block; }

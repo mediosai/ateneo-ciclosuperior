@@ -271,7 +271,9 @@ async function loadScorers() {
    Inscripción - formulario directo, sin login ni verificación de mail
    ============================================================ */
 function showAlert(el, type, msg) {
-  el.className = `alert show alert-${type}`;
+  // No pisar className: el elemento puede tener clases propias
+  el.classList.remove('alert-error', 'alert-success', 'alert-info');
+  el.classList.add('alert', 'show', `alert-${type}`);
   el.textContent = msg;
 }
 

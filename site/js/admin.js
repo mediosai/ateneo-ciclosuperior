@@ -1,7 +1,9 @@
 import { supabase } from './supabaseClient.js';
 
 function showAlert(el, type, msg) {
-  el.className = `alert show alert-${type}`;
+  // No pisar className: el elemento puede tener clases propias (.g-alert, .m-alert)
+  el.classList.remove('alert-error', 'alert-success', 'alert-info');
+  el.classList.add('alert', 'show', `alert-${type}`);
   el.textContent = msg;
 }
 
@@ -378,6 +380,7 @@ async function renderMatchDetail(el) {
     <div class="panel" style="box-shadow:none; margin-top:16px;">
       <h4 style="margin-top:0;">Goles del partido</h4>
       <p style="color:var(--text-dim); font-size:13px; margin-top:-4px;">Los jugadores son los que cada equipo cargó al inscribirse.</p>
+      <div class="goals-progress"></div>
       <div class="goals-list"></div>
       <div class="form-row" style="margin-top:12px;">
         <label>Jugador/a</label>
@@ -397,21 +400,51 @@ async function renderMatchDetail(el) {
 
   const alertEl = el.querySelector('.m-alert');
 
+  // Resultado guardado en la base. Es la referencia para validar que la
+  // cantidad de goleadores cargados nunca supere el marcador.
+  const savedScore = { home: m.home_score, away: m.away_score };
+
   el.querySelector('.m-save').addEventListener('click', async () => {
     const status = el.querySelector('.m-status').value;
     const hs = el.querySelector('.m-home-score').value;
     const as = el.querySelector('.m-away-score').value;
+    const newHome = hs === '' ? null : parseInt(hs);
+    const newAway = as === '' ? null : parseInt(as);
+
+    // No permitir bajar el marcador por debajo de los goleadores ya cargados
+    const counts = await countGoalsByTeam();
+    if (newHome !== null && counts.home > newHome) {
+      showAlert(alertEl, 'error', `${teamLabel(m.home_team_id)} ya tiene ${counts.home} goleador${counts.home === 1 ? '' : 'es'} cargado${counts.home === 1 ? '' : 's'}. Quitá goles antes de bajar el marcador a ${newHome}.`);
+      return;
+    }
+    if (newAway !== null && counts.away > newAway) {
+      showAlert(alertEl, 'error', `${teamLabel(m.away_team_id)} ya tiene ${counts.away} goleador${counts.away === 1 ? '' : 'es'} cargado${counts.away === 1 ? '' : 's'}. Quitá goles antes de bajar el marcador a ${newAway}.`);
+      return;
+    }
+
     const { error } = await supabase.from('matches').update({
       status,
-      home_score: hs === '' ? null : parseInt(hs),
-      away_score: as === '' ? null : parseInt(as),
+      home_score: newHome,
+      away_score: newAway,
       updated_at: new Date().toISOString()
     }).eq('id', m.id);
     if (error) { showAlert(alertEl, 'error', error.message); return; }
+
+    savedScore.home = newHome;
+    savedScore.away = newAway;
     showAlert(alertEl, 'success', 'Resultado guardado.');
+    refreshGoals();
     const { data } = await supabase.from('matches').select('*').order('scheduled_at', { ascending: true });
     MATCHES = data || [];
   });
+
+  async function countGoalsByTeam() {
+    const { data: goals } = await supabase.from('goals').select('team_id').eq('match_id', m.id);
+    return {
+      home: (goals || []).filter(g => g.team_id === m.home_team_id).length,
+      away: (goals || []).filter(g => g.team_id === m.away_team_id).length
+    };
+  }
 
   el.querySelector('.m-delete').addEventListener('click', async () => {
     if (!confirm('¿Eliminar este partido y sus goles?')) return;
@@ -468,7 +501,45 @@ async function renderMatchDetail(el) {
       await supabase.from('goals').delete().eq('id', b.dataset.delGoal);
       refreshGoals();
     }));
+
+    // Contador por equipo: goleadores cargados sobre el marcador guardado
+    const counts = {
+      home: (goals || []).filter(g => g.team_id === m.home_team_id).length,
+      away: (goals || []).filter(g => g.team_id === m.away_team_id).length
+    };
+    const chip = (side, teamId) => {
+      const total = savedScore[side];
+      const loaded = counts[side];
+      if (total == null) return `<span class="goal-chip pending">${teamLabel(teamId)}: sin resultado cargado</span>`;
+      const full = loaded === total;
+      return `<span class="goal-chip ${full ? 'full' : ''}">${teamLabel(teamId)}: ${loaded} de ${total} gol${total === 1 ? '' : 'es'}</span>`;
+    };
+    el.querySelector('.goals-progress').innerHTML =
+      chip('home', m.home_team_id) + chip('away', m.away_team_id);
+
+    updateAddState(counts);
   }
+
+  function updateAddState(counts) {
+    const addBtn = el.querySelector('.g-add');
+    if (!hasPlayers) return; // ya deshabilitado con su propio aviso
+
+    const noScore = savedScore.home == null && savedScore.away == null;
+    const complete = savedScore.home != null && savedScore.away != null
+      && counts.home >= savedScore.home && counts.away >= savedScore.away;
+
+    if (noScore) {
+      addBtn.disabled = true;
+      showAlert(gAlert, 'info', 'Cargá primero el resultado del partido para poder asignar los goleadores.');
+    } else if (complete) {
+      addBtn.disabled = true;
+      showAlert(gAlert, 'success', 'Ya están cargados todos los goleadores del partido.');
+    } else {
+      addBtn.disabled = false;
+      gAlert.classList.remove('show');
+    }
+  }
+
   refreshGoals();
 
   el.querySelector('.g-add').addEventListener('click', async () => {
@@ -476,6 +547,20 @@ async function renderMatchDetail(el) {
     const teamId = playerSel.selectedOptions[0]?.dataset.team;
     const minuteVal = el.querySelector('.g-minute').value;
     if (!playerId || !teamId) return;
+
+    // No permitir mas goleadores que los goles del marcador
+    const side = teamId === m.home_team_id ? 'home' : 'away';
+    const total = savedScore[side];
+    if (total == null) {
+      showAlert(gAlert, 'error', 'Cargá primero el resultado del partido.');
+      return;
+    }
+    const counts = await countGoalsByTeam();
+    if (counts[side] >= total) {
+      showAlert(gAlert, 'error', `${teamLabel(teamId)} marcó ${total} gol${total === 1 ? '' : 'es'} y ya tenés ${counts[side]} cargado${counts[side] === 1 ? '' : 's'}. Subí el marcador si falta alguno.`);
+      return;
+    }
+
     const { error } = await supabase.from('goals').insert({
       match_id: m.id, player_id: playerId, team_id: teamId,
       minute: minuteVal ? parseInt(minuteVal) : null
