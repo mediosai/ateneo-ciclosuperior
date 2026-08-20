@@ -569,11 +569,22 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
 .gate-card .icon-big { font-size: 40px; margin-bottom: 10px; }
 .gate-card p { color: var(--text-dim); font-size: 14px; }
 .session-chip {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--surface-2); padding: 8px 14px; border-radius: 999px;
-  font-size: 13px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 12px;
+  background: var(--surface-2); padding: 8px 8px 8px 16px; border-radius: 999px;
+  font-size: 13px; margin-bottom: 16px; flex-wrap: wrap;
 }
-.session-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+.session-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.session-chip-text { flex: 1; min-width: 160px; }
+.btn-logout {
+  background: transparent;
+  border: 1.5px solid rgba(168, 31, 45, .3);
+  color: var(--red);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-logout:hover { background: rgba(168, 31, 45, .1); border-color: var(--red); }
+.btn-logout:active { transform: scale(.96); transition: transform .1s ease-out; }
 
 /* ---------------- Team selector chips (roster) ---------------- */
 .team-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }

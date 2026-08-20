@@ -51,8 +51,10 @@
     <div class="panel">
       <div class="session-chip">
         <span class="dot"></span>
-        Conectado como <strong>&nbsp;<span id="adminEmailChip"></span></strong>
-        &nbsp;·&nbsp;<button class="btn btn-outline btn-sm" id="adminLogout">Cerrar sesión</button>
+        <span class="session-chip-text">Conectado como <strong id="adminEmailChip"></strong></span>
+        <button class="btn btn-logout btn-sm" id="adminLogout">
+          <span aria-hidden="true">🚪</span> Cerrar sesión
+        </button>
       </div>
       <div class="alert" id="notAdminAlert"></div>
     </div>
@@ -63,18 +65,12 @@
       <section class="panel">
         <div class="section-title"><h2>🌧️ Publicar aviso</h2></div>
         <div class="form-grid">
-          <div class="two-col">
-            <div class="form-row">
-              <label for="annKind">Tipo</label>
-              <select id="annKind">
-                <option value="suspension">Suspensión de fecha</option>
-                <option value="info">Aviso general</option>
-              </select>
-            </div>
-            <div class="form-row">
-              <label for="annMatchday">Fecha del torneo (opcional)</label>
-              <input id="annMatchday" type="number" min="1" placeholder="Ej: 4" />
-            </div>
+          <div class="form-row">
+            <label for="annKind">Tipo</label>
+            <select id="annKind">
+              <option value="suspension">Suspensión de fecha</option>
+              <option value="info">Aviso general</option>
+            </select>
           </div>
           <div class="form-row">
             <label for="annTitle">Título</label>
@@ -139,13 +135,25 @@
               <input id="matchDay" type="number" min="1" value="1" />
             </div>
             <div class="form-row">
-              <label for="matchWhen">Día y hora</label>
-              <input id="matchWhen" type="datetime-local" />
+              <label for="matchDate">Día</label>
+              <input id="matchDate" type="date" />
             </div>
           </div>
-          <div class="form-row">
-            <label for="matchVenue">Cancha / lugar</label>
-            <input id="matchVenue" placeholder="Ej: Cancha principal" />
+          <div class="two-col">
+            <div class="form-row">
+              <label for="matchTime">Horario</label>
+              <select id="matchTime">
+                <option value="17:00">17:00</option>
+                <option value="18:00">18:00</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="matchVenue">Cancha</label>
+              <select id="matchVenue">
+                <option value="Sintético">Sintético</option>
+                <option value="Césped">Césped</option>
+              </select>
+            </div>
           </div>
           <button class="btn btn-primary" id="createMatchBtn">Programar partido</button>
         </div>

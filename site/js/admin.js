@@ -91,17 +91,13 @@ document.getElementById('publishAnnBtn').addEventListener('click', async () => {
   const kind = document.getElementById('annKind').value;
   const title = document.getElementById('annTitle').value.trim();
   const message = document.getElementById('annMessage').value.trim();
-  const matchdayVal = document.getElementById('annMatchday').value;
   const alertEl = document.getElementById('annAlert');
   if (!title || !message) { showAlert(alertEl, 'error', 'Completá título y mensaje.'); return; }
-  const { error } = await supabase.from('announcements').insert({
-    kind, title, message, matchday: matchdayVal ? parseInt(matchdayVal) : null
-  });
+  const { error } = await supabase.from('announcements').insert({ kind, title, message });
   if (error) { showAlert(alertEl, 'error', error.message); return; }
   showAlert(alertEl, 'success', 'Aviso publicado.');
   document.getElementById('annTitle').value = '';
   document.getElementById('annMessage').value = '';
-  document.getElementById('annMatchday').value = '';
   loadAdminAnnouncements();
 });
 
@@ -131,8 +127,9 @@ document.getElementById('createMatchBtn').addEventListener('click', async () => 
   const home_team_id = document.getElementById('matchHome').value;
   const away_team_id = document.getElementById('matchAway').value;
   const matchday = parseInt(document.getElementById('matchDay').value || '1');
-  const whenVal = document.getElementById('matchWhen').value;
-  const venue = document.getElementById('matchVenue').value.trim();
+  const dateVal = document.getElementById('matchDate').value;
+  const timeVal = document.getElementById('matchTime').value;
+  const venue = document.getElementById('matchVenue').value;
   const alertEl = document.getElementById('matchAlert');
 
   if (!home_team_id || !away_team_id || home_team_id === away_team_id) {
@@ -140,12 +137,12 @@ document.getElementById('createMatchBtn').addEventListener('click', async () => 
   }
   const { error } = await supabase.from('matches').insert({
     home_team_id, away_team_id, matchday,
-    scheduled_at: whenVal ? new Date(whenVal).toISOString() : null,
-    venue: venue || null, status: 'scheduled'
+    scheduled_at: dateVal ? new Date(`${dateVal}T${timeVal}`).toISOString() : null,
+    venue, status: 'scheduled'
   });
   if (error) { showAlert(alertEl, 'error', error.message); return; }
   showAlert(alertEl, 'success', 'Partido programado.');
-  document.getElementById('matchVenue').value = '';
+  document.getElementById('matchDate').value = '';
   loadAdminMatches();
 });
 
