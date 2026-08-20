@@ -240,115 +240,250 @@ document.getElementById('createMatchBtn').addEventListener('click', async () => 
   loadAdminMatches();
 });
 
-/* ---------------- Gestión de partidos (resultado + goles) ---------------- */
+/* ---------------- Gestión de partidos: fechas > partidos > detalle ---------------- */
+// Nivel actual del panel: 'matchdays' (lista de fechas), 'matches'
+// (partidos de una fecha) o 'detail' (carga de datos de un partido).
+let matchesView = { level: 'matchdays', matchday: null, matchId: null };
+let MATCHES = [];
+
+const STATUS_LABEL = {
+  scheduled: 'Programado',
+  played: 'Jugado',
+  suspended: 'Suspendido',
+  postponed: 'Postergado'
+};
+
 async function loadAdminMatches() {
-  const { data: matches } = await supabase.from('matches').select('*').order('scheduled_at', { ascending: true });
-  const teamMap = Object.fromEntries(TEAMS.map(t => [t.id, t]));
+  const { data } = await supabase.from('matches').select('*').order('scheduled_at', { ascending: true });
+  MATCHES = data || [];
+  renderMatchesPanel();
+}
+
+function teamLabel(id) {
+  const t = TEAMS.find(x => x.id === id);
+  return t ? t.name : '?';
+}
+
+function fmtMatchDate(iso) {
+  if (!iso) return 'A confirmar';
+  return new Date(iso).toLocaleString('es-AR', {
+    weekday: 'short', day: '2-digit', month: 'short',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  });
+}
+
+function renderMatchesPanel() {
   const el = document.getElementById('adminMatchesList');
+  if (!MATCHES.length) {
+    el.innerHTML = `<div class="empty-state">No hay partidos cargados todavía.</div>`;
+    return;
+  }
+  if (matchesView.level === 'matchdays') return renderMatchdayList(el);
+  if (matchesView.level === 'matches') return renderMatchList(el);
+  return renderMatchDetail(el);
+}
 
-  if (!matches || !matches.length) { el.innerHTML = `<div class="empty-state">No hay partidos cargados todavía.</div>`; return; }
+/* --- Nivel 1: fechas --- */
+function renderMatchdayList(el) {
+  const days = [...new Set(MATCHES.map(m => m.matchday))].sort((a, b) => a - b);
 
-  el.innerHTML = matches.map(m => `
-    <div class="match-card" style="margin-bottom:14px;" data-match="${m.id}">
-      <div class="match-meta">
-        <span>Fecha ${m.matchday} · ${teamMap[m.home_team_id]?.name || '?'} vs ${teamMap[m.away_team_id]?.name || '?'}</span>
-      </div>
-      <div class="two-col">
-        <div class="form-row">
-          <label>Estado</label>
-          <select class="m-status">
-            <option value="scheduled" ${m.status === 'scheduled' ? 'selected' : ''}>Programado</option>
-            <option value="played" ${m.status === 'played' ? 'selected' : ''}>Jugado</option>
-            <option value="suspended" ${m.status === 'suspended' ? 'selected' : ''}>Suspendido</option>
-            <option value="postponed" ${m.status === 'postponed' ? 'selected' : ''}>Postergado</option>
-          </select>
+  el.innerHTML = days.map(d => {
+    const ms = MATCHES.filter(m => m.matchday === d);
+    const played = ms.filter(m => m.status === 'played').length;
+    const done = played === ms.length;
+    return `
+      <button class="drill-row" data-matchday="${d}">
+        <div class="drill-main">
+          <strong>Fecha ${d}</strong>
+          <div class="drill-sub">${ms.length} partido${ms.length === 1 ? '' : 's'} · ${played} cargado${played === 1 ? '' : 's'}</div>
         </div>
-        <div class="form-row" style="display:flex; gap:8px;">
-          <div style="flex:1"><label>Goles local</label><input type="number" min="0" class="m-home-score" value="${m.home_score ?? ''}" /></div>
-          <div style="flex:1"><label>Goles visitante</label><input type="number" min="0" class="m-away-score" value="${m.away_score ?? ''}" /></div>
+        <span class="drill-badge ${done ? 'done' : ''}">${done ? 'Completa' : `${ms.length - played} pendiente${ms.length - played === 1 ? '' : 's'}`}</span>
+        <span class="drill-arrow">›</span>
+      </button>`;
+  }).join('');
+
+  el.querySelectorAll('[data-matchday]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      matchesView = { level: 'matches', matchday: parseInt(btn.dataset.matchday), matchId: null };
+      renderMatchesPanel();
+    });
+  });
+}
+
+/* --- Nivel 2: partidos de una fecha --- */
+function renderMatchList(el) {
+  const ms = MATCHES.filter(m => m.matchday === matchesView.matchday);
+
+  el.innerHTML = `
+    <button class="drill-back" id="backToMatchdays">‹ Todas las fechas</button>
+    <h4 style="margin:14px 0 10px;">Fecha ${matchesView.matchday}</h4>
+    ${ms.map(m => `
+      <button class="drill-row" data-match="${m.id}">
+        <div class="drill-main">
+          <strong>${teamLabel(m.home_team_id)} vs ${teamLabel(m.away_team_id)}</strong>
+          <div class="drill-sub">${fmtMatchDate(m.scheduled_at)}${m.venue ? ' · ' + m.venue : ''}</div>
         </div>
+        ${m.status === 'played' && m.home_score != null
+          ? `<span class="drill-score">${m.home_score} - ${m.away_score}</span>`
+          : `<span class="drill-badge">${STATUS_LABEL[m.status] || m.status}</span>`}
+        <span class="drill-arrow">›</span>
+      </button>`).join('')}`;
+
+  document.getElementById('backToMatchdays').addEventListener('click', () => {
+    matchesView = { level: 'matchdays', matchday: null, matchId: null };
+    renderMatchesPanel();
+  });
+  el.querySelectorAll('[data-match]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      matchesView = { ...matchesView, level: 'detail', matchId: btn.dataset.match };
+      renderMatchesPanel();
+    });
+  });
+}
+
+/* --- Nivel 3: detalle del partido (resultado + goles) --- */
+async function renderMatchDetail(el) {
+  const m = MATCHES.find(x => x.id === matchesView.matchId);
+  if (!m) { matchesView.level = 'matches'; return renderMatchesPanel(); }
+
+  el.innerHTML = `
+    <button class="drill-back" id="backToMatches">‹ Fecha ${m.matchday}</button>
+
+    <div class="match-card" style="margin-top:14px;">
+      <div class="match-meta"><span>Fecha ${m.matchday}</span><span>${fmtMatchDate(m.scheduled_at)}${m.venue ? ' · ' + m.venue : ''}</span></div>
+      <div class="match-teams" style="margin-bottom:16px;">
+        <div class="match-team home">${teamLabel(m.home_team_id)}</div>
+        <div class="match-score">${m.home_score != null ? `${m.home_score} - ${m.away_score}` : 'vs'}</div>
+        <div class="match-team away">${teamLabel(m.away_team_id)}</div>
       </div>
-      <div style="display:flex; gap:8px; margin-top:10px;">
+
+      <div class="form-row">
+        <label>Estado</label>
+        <select class="m-status">
+          ${Object.entries(STATUS_LABEL).map(([v, l]) =>
+            `<option value="${v}" ${m.status === v ? 'selected' : ''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="two-col" style="margin-top:12px;">
+        <div class="form-row"><label>Goles ${teamLabel(m.home_team_id)}</label><input type="number" min="0" class="m-home-score" value="${m.home_score ?? ''}" /></div>
+        <div class="form-row"><label>Goles ${teamLabel(m.away_team_id)}</label><input type="number" min="0" class="m-away-score" value="${m.away_score ?? ''}" /></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm m-save">Guardar resultado</button>
-        <button class="btn btn-outline btn-sm m-delete">Eliminar partido</button>
+        <button class="btn btn-outline btn-sm m-delete" style="color:var(--red);">Eliminar partido</button>
       </div>
       <div class="alert m-alert"></div>
+    </div>
 
-      <h4 style="margin:16px 0 8px;">Goles del partido</h4>
+    <div class="panel" style="box-shadow:none; margin-top:16px;">
+      <h4 style="margin-top:0;">Goles del partido</h4>
+      <p style="color:var(--text-dim); font-size:13px; margin-top:-4px;">Los jugadores son los que cada equipo cargó al inscribirse.</p>
       <div class="goals-list"></div>
-      <div class="two-col" style="align-items:end;">
-        <div class="form-row">
-          <label>Jugador/a</label>
-          <select class="g-player"></select>
-        </div>
-        <div class="form-row" style="display:flex; gap:8px;">
-          <div style="flex:1"><label>Minuto</label><input type="number" min="0" class="g-minute" placeholder="Ej: 23" /></div>
-          <button class="btn btn-primary btn-sm g-add" style="align-self:end;">+ Gol</button>
-        </div>
+      <div class="form-row" style="margin-top:12px;">
+        <label>Jugador/a</label>
+        <select class="g-player"></select>
       </div>
-    </div>`).join('');
+      <div class="two-col" style="align-items:end; margin-top:10px;">
+        <div class="form-row"><label>Minuto (opcional)</label><input type="number" min="0" class="g-minute" placeholder="Ej: 23" /></div>
+        <button class="btn btn-primary btn-sm g-add">+ Agregar gol</button>
+      </div>
+      <div class="alert g-alert"></div>
+    </div>`;
 
-  for (const m of matches) {
-    const card = el.querySelector(`[data-match="${m.id}"]`);
-    card.querySelector('.m-save').addEventListener('click', async () => {
-      const status = card.querySelector('.m-status').value;
-      const hs = card.querySelector('.m-home-score').value;
-      const as = card.querySelector('.m-away-score').value;
-      const alertEl = card.querySelector('.m-alert');
-      const { error } = await supabase.from('matches').update({
-        status,
-        home_score: hs === '' ? null : parseInt(hs),
-        away_score: as === '' ? null : parseInt(as),
-        updated_at: new Date().toISOString()
-      }).eq('id', m.id);
-      if (error) showAlert(alertEl, 'error', error.message);
-      else { showAlert(alertEl, 'success', 'Guardado.'); }
-    });
-    card.querySelector('.m-delete').addEventListener('click', async () => {
-      if (!confirm('¿Eliminar este partido y sus goles?')) return;
-      await supabase.from('matches').delete().eq('id', m.id);
-      loadAdminMatches();
-    });
+  document.getElementById('backToMatches').addEventListener('click', () => {
+    matchesView = { ...matchesView, level: 'matches', matchId: null };
+    renderMatchesPanel();
+  });
 
-    const homePlayers = await supabase.from('players').select('*').eq('team_id', m.home_team_id);
-    const awayPlayers = await supabase.from('players').select('*').eq('team_id', m.away_team_id);
-    const allPlayers = [
-      ...(homePlayers.data || []).map(p => ({ ...p, teamLabel: teamMap[m.home_team_id]?.name })),
-      ...(awayPlayers.data || []).map(p => ({ ...p, teamLabel: teamMap[m.away_team_id]?.name }))
-    ];
-    const playerSel = card.querySelector('.g-player');
-    playerSel.innerHTML = allPlayers.map(p => `<option value="${p.id}" data-team="${p.team_id}">${p.first_name} ${p.last_name} (${p.teamLabel})</option>`).join('') || `<option disabled>Sin jugadores cargados</option>`;
+  const alertEl = el.querySelector('.m-alert');
 
-    async function refreshGoals() {
-      const { data: goals } = await supabase.from('goals').select('*, players(first_name,last_name)').eq('match_id', m.id).order('minute');
-      const list = card.querySelector('.goals-list');
-      list.innerHTML = (goals || []).length
-        ? goals.map(g => `<div class="announce-item info" style="padding:8px 12px;">
-             <span class="icon">⚽</span>
-             <div style="flex:1">${g.players?.first_name || ''} ${g.players?.last_name || ''} ${g.minute != null ? `· min ${g.minute}` : ''}</div>
-             <button class="btn btn-outline btn-sm" data-del-goal="${g.id}">Quitar</button>
-           </div>`).join('')
-        : `<div class="empty-state" style="padding:10px;">Sin goles cargados.</div>`;
-      list.querySelectorAll('[data-del-goal]').forEach(b => b.addEventListener('click', async () => {
-        await supabase.from('goals').delete().eq('id', b.dataset.delGoal);
-        refreshGoals();
-      }));
-    }
-    refreshGoals();
+  el.querySelector('.m-save').addEventListener('click', async () => {
+    const status = el.querySelector('.m-status').value;
+    const hs = el.querySelector('.m-home-score').value;
+    const as = el.querySelector('.m-away-score').value;
+    const { error } = await supabase.from('matches').update({
+      status,
+      home_score: hs === '' ? null : parseInt(hs),
+      away_score: as === '' ? null : parseInt(as),
+      updated_at: new Date().toISOString()
+    }).eq('id', m.id);
+    if (error) { showAlert(alertEl, 'error', error.message); return; }
+    showAlert(alertEl, 'success', 'Resultado guardado.');
+    const { data } = await supabase.from('matches').select('*').order('scheduled_at', { ascending: true });
+    MATCHES = data || [];
+  });
 
-    card.querySelector('.g-add').addEventListener('click', async () => {
-      const playerId = playerSel.value;
-      const teamId = playerSel.selectedOptions[0]?.dataset.team;
-      const minuteVal = card.querySelector('.g-minute').value;
-      if (!playerId || !teamId) return;
-      await supabase.from('goals').insert({
-        match_id: m.id, player_id: playerId, team_id: teamId,
-        minute: minuteVal ? parseInt(minuteVal) : null
-      });
-      card.querySelector('.g-minute').value = '';
-      refreshGoals();
-    });
+  el.querySelector('.m-delete').addEventListener('click', async () => {
+    if (!confirm('¿Eliminar este partido y sus goles?')) return;
+    await supabase.from('matches').delete().eq('id', m.id);
+    matchesView = { ...matchesView, level: 'matches', matchId: null };
+    loadAdminMatches();
+  });
+
+  // Jugadores inscriptos por cada equipo (datos cargados en la inscripción)
+  const [homeRes, awayRes] = await Promise.all([
+    supabase.from('players').select('*').eq('team_id', m.home_team_id).order('last_name'),
+    supabase.from('players').select('*').eq('team_id', m.away_team_id).order('last_name')
+  ]);
+
+  const playerSel = el.querySelector('.g-player');
+  const groups = [
+    { label: teamLabel(m.home_team_id), players: homeRes.data || [] },
+    { label: teamLabel(m.away_team_id), players: awayRes.data || [] }
+  ];
+  const hasPlayers = groups.some(g => g.players.length);
+
+  playerSel.innerHTML = hasPlayers
+    ? groups.filter(g => g.players.length).map(g => `
+        <optgroup label="${g.label}">
+          ${g.players.map(p => `<option value="${p.id}" data-team="${p.team_id}">${p.last_name}, ${p.first_name}</option>`).join('')}
+        </optgroup>`).join('')
+    : `<option value="" disabled selected>Ningún equipo cargó jugadores</option>`;
+
+  const gAlert = el.querySelector('.g-alert');
+  if (!hasPlayers) {
+    el.querySelector('.g-add').disabled = true;
+    showAlert(gAlert, 'info', 'Para cargar goles, los equipos tienen que tener jugadores inscriptos.');
   }
+
+  async function refreshGoals() {
+    const { data: goals } = await supabase
+      .from('goals')
+      .select('*, players(first_name,last_name), teams(name)')
+      .eq('match_id', m.id)
+      .order('minute');
+    const list = el.querySelector('.goals-list');
+    list.innerHTML = (goals || []).length
+      ? goals.map(g => `
+          <div class="announce-item info" style="padding:8px 12px;">
+            <span class="icon">⚽</span>
+            <div style="flex:1">
+              <strong>${g.players?.last_name || ''}, ${g.players?.first_name || ''}</strong>
+              <div class="when">${g.teams?.name || ''}${g.minute != null ? ' · min ' + g.minute : ''}</div>
+            </div>
+            <button class="btn btn-outline btn-sm" data-del-goal="${g.id}">Quitar</button>
+          </div>`).join('')
+      : `<div class="empty-state" style="padding:10px;">Sin goles cargados.</div>`;
+    list.querySelectorAll('[data-del-goal]').forEach(b => b.addEventListener('click', async () => {
+      await supabase.from('goals').delete().eq('id', b.dataset.delGoal);
+      refreshGoals();
+    }));
+  }
+  refreshGoals();
+
+  el.querySelector('.g-add').addEventListener('click', async () => {
+    const playerId = playerSel.value;
+    const teamId = playerSel.selectedOptions[0]?.dataset.team;
+    const minuteVal = el.querySelector('.g-minute').value;
+    if (!playerId || !teamId) return;
+    const { error } = await supabase.from('goals').insert({
+      match_id: m.id, player_id: playerId, team_id: teamId,
+      minute: minuteVal ? parseInt(minuteVal) : null
+    });
+    if (error) { showAlert(gAlert, 'error', error.message); return; }
+    el.querySelector('.g-minute').value = '';
+    refreshGoals();
+  });
 }
 
 /* ---------------- Boot ---------------- */
