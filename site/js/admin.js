@@ -271,7 +271,105 @@ async function bootDashboard() {
   await loadAdminTeams();
   await loadAdminMatches();
   await loadAdminAnnouncements();
+  await loadAdminPhotos();
 }
+
+/* ---------------- Portada / carrusel de fotos ---------------- */
+async function loadAdminPhotos() {
+  const { data: photos } = await supabase.from('cover_photos').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true });
+  const el = document.getElementById('adminPhotosList');
+  document.getElementById('photosCountBadge').textContent = `${photos?.length || 0} foto${(photos?.length || 0) === 1 ? '' : 's'}`;
+
+  if (!photos || !photos.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon-big">📸</div>Todavía no subiste fotos.</div>`;
+    return;
+  }
+
+  el.innerHTML = photos.map((p, i) => `
+    <div class="match-card photo-card" data-id="${p.id}">
+      <img src="${p.image_url}" alt="${p.caption || 'Foto del torneo'}" />
+      <div class="photo-card-body">
+        <div class="photo-card-caption">${p.caption || '<span style="color:var(--text-dim); font-weight:400;">Sin epígrafe</span>'}</div>
+        <div class="photo-card-actions">
+          <button class="btn btn-outline p-up" ${i === 0 ? 'disabled' : ''} title="Subir">↑</button>
+          <button class="btn btn-outline p-down" ${i === photos.length - 1 ? 'disabled' : ''} title="Bajar">↓</button>
+          <button class="btn btn-outline p-del" title="Eliminar" style="color:var(--red);">Eliminar</button>
+        </div>
+      </div>
+    </div>`).join('');
+
+  el.querySelectorAll('.photo-card').forEach(card => {
+    const id = card.dataset.id;
+    const idx = photos.findIndex(p => p.id === id);
+
+    card.querySelector('.p-up')?.addEventListener('click', async () => {
+      if (idx <= 0) return;
+      await swapOrder(photos[idx], photos[idx - 1]);
+      loadAdminPhotos();
+    });
+    card.querySelector('.p-down')?.addEventListener('click', async () => {
+      if (idx >= photos.length - 1) return;
+      await swapOrder(photos[idx], photos[idx + 1]);
+      loadAdminPhotos();
+    });
+    card.querySelector('.p-del').addEventListener('click', async () => {
+      if (!confirm('¿Eliminar esta foto del carrusel?')) return;
+      const photo = photos[idx];
+      const path = photo.image_url.split('/portada/').pop();
+      if (path) await supabase.storage.from('portada').remove([path]);
+      await supabase.from('cover_photos').delete().eq('id', photo.id);
+      loadAdminPhotos();
+    });
+  });
+}
+
+async function swapOrder(a, b) {
+  const orderA = a.sort_order, orderB = b.sort_order;
+  const finalOrderA = orderA === orderB ? 1 : orderB;
+  const finalOrderB = orderA === orderB ? 0 : orderA;
+  await Promise.all([
+    supabase.from('cover_photos').update({ sort_order: finalOrderA }).eq('id', a.id),
+    supabase.from('cover_photos').update({ sort_order: finalOrderB }).eq('id', b.id)
+  ]);
+}
+
+document.getElementById('uploadPhotoBtn').addEventListener('click', async () => {
+  const fileInput = document.getElementById('photoFile');
+  const caption = document.getElementById('photoCaption').value.trim();
+  const alertEl = document.getElementById('photoAlert');
+  const file = fileInput.files?.[0];
+
+  if (!file) { showAlert(alertEl, 'error', 'Elegí una foto para subir.'); return; }
+  if (file.size > 8 * 1024 * 1024) { showAlert(alertEl, 'error', 'La foto pesa más de 8MB.'); return; }
+
+  const btn = document.getElementById('uploadPhotoBtn');
+  btn.disabled = true; btn.textContent = 'Subiendo...';
+
+  const ext = file.name.split('.').pop();
+  const path = `${crypto.randomUUID()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage.from('portada').upload(path, file, { cacheControl: '3600', upsert: false });
+  if (uploadError) {
+    btn.disabled = false; btn.textContent = 'Subir foto';
+    showAlert(alertEl, 'error', 'Error al subir: ' + uploadError.message);
+    return;
+  }
+
+  const { data: pub } = supabase.storage.from('portada').getPublicUrl(path);
+  const { count } = await supabase.from('cover_photos').select('*', { count: 'exact', head: true });
+
+  const { error: insertError } = await supabase.from('cover_photos').insert({
+    image_url: pub.publicUrl, caption: caption || null, sort_order: count || 0
+  });
+
+  btn.disabled = false; btn.textContent = 'Subir foto';
+  if (insertError) { showAlert(alertEl, 'error', 'Error al guardar: ' + insertError.message); return; }
+
+  showAlert(alertEl, 'success', 'Foto agregada al carrusel.');
+  fileInput.value = '';
+  document.getElementById('photoCaption').value = '';
+  loadAdminPhotos();
+});
 
 async function boot() {
   const { data: { session } } = await supabase.auth.getSession();

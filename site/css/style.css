@@ -185,6 +185,99 @@ button { font-family: inherit; cursor: pointer; }
 }
 .banner-close:hover { background: rgba(255,255,255,.3); }
 
+/* ---------------- Portada / carrusel ---------------- */
+.cover-carousel {
+  position: relative;
+  height: clamp(220px, 38vw, 460px);
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--navy), var(--blue-dark));
+}
+.carousel-track {
+  display: flex;
+  height: 100%;
+  transition: transform .6s cubic-bezier(.65, 0, .35, 1);
+  will-change: transform;
+}
+.carousel-slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+}
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.carousel-caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 32px 28px 20px;
+  background: linear-gradient(0deg, rgba(13,27,48,.85), transparent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+.carousel-empty {
+  flex: 0 0 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #cdd6e8;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(240,180,41,.2), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(168,31,45,.2), transparent 40%);
+}
+.carousel-empty .icon-big { font-size: 34px; }
+.carousel-empty p { margin: 0; font-size: 14px; }
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(13, 27, 48, .45);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s var(--ease), transform .15s ease-out;
+  z-index: 2;
+}
+.carousel-arrow:hover { background: rgba(13, 27, 48, .7); }
+.carousel-arrow:active { transform: translateY(-50%) scale(.92); }
+.carousel-arrow.prev { left: 14px; }
+.carousel-arrow.next { right: 14px; }
+.carousel-arrow[hidden] { display: none; }
+.carousel-dots {
+  position: absolute;
+  left: 0; right: 0; bottom: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  z-index: 2;
+}
+.carousel-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.4);
+  transition: background .2s var(--ease), transform .2s var(--ease);
+  padding: 0;
+}
+.carousel-dot.active { background: var(--gold); transform: scale(1.3); }
+
+@media (max-width: 640px) {
+  .carousel-arrow { width: 34px; height: 34px; font-size: 18px; }
+  .carousel-caption { padding: 22px 16px 14px; font-size: 13px; }
+}
+
 /* ---------------- Hero ---------------- */
 .hero {
   background:
@@ -491,6 +584,14 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
 .team-chip:hover { border-color: var(--gold); color: var(--text); }
 .team-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 .team-chip:active { transform: scale(.95); transition: transform .1s ease-out; }
+
+/* ---------------- Fotos (admin) ---------------- */
+.photo-card { padding: 0; overflow: hidden; }
+.photo-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+.photo-card-body { padding: 10px 12px; }
+.photo-card-caption { font-size: 13px; font-weight: 600; margin-bottom: 8px; min-height: 18px; }
+.photo-card-actions { display: flex; gap: 6px; }
+.photo-card-actions .btn { flex: 1; padding: 6px 8px; font-size: 12px; }
 
 /* ---------------- Loader / skeleton ---------------- */
 .skeleton {

@@ -34,6 +34,76 @@ const statusLabel = { scheduled: 'Programado', played: 'Jugado', suspended: 'Sus
 function teamName(map, id) { return map[id]?.name ?? 'Equipo'; }
 
 /* ============================================================
+   Portada - carrusel de fotos
+   ============================================================ */
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+async function loadCoverCarousel() {
+  const { data: photos } = await supabase
+    .from('cover_photos')
+    .select('*')
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  const track = document.getElementById('carouselTrack');
+  const prevBtn = document.getElementById('carouselPrev');
+  const nextBtn = document.getElementById('carouselNext');
+  const dotsEl = document.getElementById('carouselDots');
+
+  if (!photos || !photos.length) return; // deja el estado vacío ya presente en el HTML
+
+  track.innerHTML = photos.map(p => `
+    <div class="carousel-slide">
+      <img src="${p.image_url}" alt="${p.caption ? p.caption.replace(/"/g, '&quot;') : 'Foto del torneo'}" loading="lazy" />
+      ${p.caption ? `<div class="carousel-caption">${p.caption}</div>` : ''}
+    </div>`).join('');
+
+  dotsEl.innerHTML = photos.map((_, i) => `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-i="${i}" aria-label="Ir a la foto ${i + 1}"></button>`).join('');
+
+  let current = 0;
+  const dots = [...dotsEl.querySelectorAll('.carousel-dot')];
+  const total = photos.length;
+
+  function goTo(i) {
+    current = (i + total) % total;
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach((d, idx) => d.classList.toggle('active', idx === current));
+  }
+
+  if (total > 1) {
+    prevBtn.hidden = false;
+    nextBtn.hidden = false;
+    prevBtn.addEventListener('click', () => { goTo(current - 1); resetAutoplay(); });
+    nextBtn.addEventListener('click', () => { goTo(current + 1); resetAutoplay(); });
+    dots.forEach(d => d.addEventListener('click', () => { goTo(parseInt(d.dataset.i)); resetAutoplay(); }));
+
+    // Swipe táctil
+    let startX = null;
+    track.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+    track.addEventListener('touchend', e => {
+      if (startX === null) return;
+      const diff = e.changedTouches[0].clientX - startX;
+      if (Math.abs(diff) > 40) { diff > 0 ? goTo(current - 1) : goTo(current + 1); resetAutoplay(); }
+      startX = null;
+    }, { passive: true });
+
+    let autoplayTimer = null;
+    function startAutoplay() {
+      if (prefersReducedMotion) return;
+      autoplayTimer = setInterval(() => goTo(current + 1), 5000);
+    }
+    function resetAutoplay() {
+      clearInterval(autoplayTimer);
+      startAutoplay();
+    }
+    const carousel = document.getElementById('coverCarousel');
+    carousel.addEventListener('mouseenter', () => clearInterval(autoplayTimer));
+    carousel.addEventListener('mouseleave', startAutoplay);
+    startAutoplay();
+  }
+}
+
+/* ============================================================
    Aviso de suspensión (banner)
    ============================================================ */
 async function loadBanner() {
@@ -370,6 +440,7 @@ async function renderPlayersPanel(team) {
    Boot
    ============================================================ */
 async function boot() {
+  loadCoverCarousel();
   loadBanner();
   loadStandings();
   loadMatches();

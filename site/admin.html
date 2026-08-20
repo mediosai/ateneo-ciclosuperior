@@ -87,6 +87,28 @@
         <div id="adminAnnList" class="announce-list"></div>
       </section>
 
+      <!-- Portada / carrusel de fotos -->
+      <section class="panel">
+        <div class="section-title"><h2>📸 Portada - carrusel de fotos</h2><span class="badge" id="photosCountBadge">-</span></div>
+        <p style="color:var(--text-dim); font-size:13.5px; margin-top:-8px;">Las fotos que subas acá aparecen en el carrusel de la portada, en el orden de esta lista.</p>
+        <div class="form-grid">
+          <div class="two-col">
+            <div class="form-row">
+              <label for="photoFile">Foto (JPG, PNG o WEBP, máx. 8MB)</label>
+              <input id="photoFile" type="file" accept="image/jpeg,image/png,image/webp" />
+            </div>
+            <div class="form-row">
+              <label for="photoCaption">Epígrafe (opcional)</label>
+              <input id="photoCaption" placeholder="Ej: Final Ciclo Superior 2025" />
+            </div>
+          </div>
+          <button class="btn btn-primary" id="uploadPhotoBtn">Subir foto</button>
+        </div>
+        <div class="alert" id="photoAlert"></div>
+        <h4 style="margin-top:22px;">Fotos cargadas</h4>
+        <div id="adminPhotosList" class="match-grid"></div>
+      </section>
+
       <!-- Equipos inscriptos -->
       <section class="panel">
         <div class="section-title"><h2>🧾 Equipos inscriptos</h2><span class="badge" id="teamsCountBadge">-</span></div>
