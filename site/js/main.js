@@ -17,6 +17,15 @@ function showSection(name) {
 navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.section)));
 navToggle.addEventListener('click', () => mainNav.classList.toggle('open'));
 
+// Logo/nombre del colegio: vuelve al inicio (arriba de todo, pestaña Posiciones)
+document.getElementById('brandLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  mainNav.classList.remove('open');
+  sections.forEach(s => s.classList.toggle('active', s.id === 'sec-posiciones'));
+  navButtons.forEach(b => b.classList.toggle('active', b.dataset.section === 'posiciones'));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
 // Deep-link vía hash (#posiciones, #inscripcion, etc.)
 const hashSection = location.hash.replace('#', '');
 if (hashSection && document.getElementById(`sec-${hashSection}`)) showSection(hashSection);
