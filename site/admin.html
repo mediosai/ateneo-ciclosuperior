@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Panel Organizadores · Torneo Ciclo Superior</title>
+<link rel="icon" href="assets/logo.svg" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <img src="assets/logo.svg" alt="Logo del colegio" class="brand-logo" />
+      <div class="brand-text">
+        <div class="brand-school">Casa Salesiana Juan Segundo Fernández</div>
+        <div class="brand-name">Panel de Organizadores</div>
+      </div>
+    </a>
+    <a href="index.html" class="btn btn-outline btn-sm">← Volver al sitio</a>
+  </div>
+</header>
+
+<main class="container" style="margin-top:40px;">
+
+  <!-- LOGIN -->
+  <section class="panel" id="loginPanel">
+    <div class="gate-card">
+      <div class="icon-big">🛡️</div>
+      <h3>Acceso de organizadores</h3>
+      <p>Ingresá con tu mail institucional autorizado como administrador del torneo.</p>
+      <div class="form-grid" style="text-align:left; margin-top:14px;">
+        <div class="form-row">
+          <label for="adminEmail">Mail institucional</label>
+          <input type="email" id="adminEmail" placeholder="organizador@csjsf.edu.ar" />
+        </div>
+        <button class="btn btn-primary btn-block" id="adminSendLink">Enviar enlace de acceso</button>
+      </div>
+      <div class="alert" id="adminAuthAlert"></div>
+    </div>
+  </section>
+
+  <!-- ADMIN DASHBOARD -->
+  <div id="adminDashboard" style="display:none;">
+
+    <div class="panel">
+      <div class="session-chip">
+        <span class="dot"></span>
+        Conectado como <strong>&nbsp;<span id="adminEmailChip"></span></strong>
+        &nbsp;·&nbsp;<button class="btn btn-outline btn-sm" id="adminLogout">Cerrar sesión</button>
+      </div>
+      <div class="alert" id="notAdminAlert"></div>
+    </div>
+
+    <div id="adminContent" style="display:none;">
+
+      <!-- Aviso de suspensión rápido -->
+      <section class="panel">
+        <div class="section-title"><h2>🌧️ Publicar aviso</h2></div>
+        <div class="form-grid">
+          <div class="two-col">
+            <div class="form-row">
+              <label for="annKind">Tipo</label>
+              <select id="annKind">
+                <option value="suspension">Suspensión de fecha</option>
+                <option value="info">Aviso general</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="annMatchday">Fecha del torneo (opcional)</label>
+              <input id="annMatchday" type="number" min="1" placeholder="Ej: 4" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="annTitle">Título</label>
+            <input id="annTitle" placeholder="Ej: Se suspende la fecha 4 por lluvia" />
+          </div>
+          <div class="form-row">
+            <label for="annMessage">Mensaje</label>
+            <input id="annMessage" placeholder="Detalle para los equipos" />
+          </div>
+          <button class="btn btn-primary" id="publishAnnBtn">Publicar aviso</button>
+        </div>
+        <div class="alert" id="annAlert"></div>
+        <h4 style="margin-top:22px;">Avisos publicados</h4>
+        <div id="adminAnnList" class="announce-list"></div>
+      </section>
+
+      <!-- Equipos inscriptos -->
+      <section class="panel">
+        <div class="section-title"><h2>🧾 Equipos inscriptos</h2><span class="badge" id="teamsCountBadge">—</span></div>
+        <div id="adminTeamsList" class="table-wrap"></div>
+      </section>
+
+      <!-- Crear / editar partidos -->
+      <section class="panel">
+        <div class="section-title"><h2>📅 Fixture — nuevo partido</h2></div>
+        <div class="form-grid">
+          <div class="two-col">
+            <div class="form-row">
+              <label for="matchHome">Equipo local</label>
+              <select id="matchHome"></select>
+            </div>
+            <div class="form-row">
+              <label for="matchAway">Equipo visitante</label>
+              <select id="matchAway"></select>
+            </div>
+          </div>
+          <div class="two-col">
+            <div class="form-row">
+              <label for="matchDay">Fecha (jornada Nº)</label>
+              <input id="matchDay" type="number" min="1" value="1" />
+            </div>
+            <div class="form-row">
+              <label for="matchWhen">Día y hora</label>
+              <input id="matchWhen" type="datetime-local" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label for="matchVenue">Cancha / lugar</label>
+            <input id="matchVenue" placeholder="Ej: Cancha principal" />
+          </div>
+          <button class="btn btn-primary" id="createMatchBtn">Programar partido</button>
+        </div>
+        <div class="alert" id="matchAlert"></div>
+      </section>
+
+      <!-- Gestión de partidos: resultado, goles, estado -->
+      <section class="panel">
+        <div class="section-title"><h2>⚽ Partidos — cargar resultados y goles</h2></div>
+        <div id="adminMatchesList"></div>
+      </section>
+
+    </div>
+  </div>
+
+</main>
+
+<footer class="app-footer">Panel privado — solo organizadores del torneo.</footer>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

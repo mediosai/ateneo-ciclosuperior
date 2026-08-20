@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Torneo Ciclo Superior · Casa Salesiana Juan Segundo Fernández</title>
+<meta name="description" content="Torneo de fútbol escolar de Ciclo Superior — Casa Salesiana Juan Segundo Fernández, Obra de Don Bosco." />
+<link rel="icon" href="assets/logo.svg" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <a href="#inicio" class="brand" id="brandLink">
+      <img src="assets/logo.svg" alt="Logo del colegio" class="brand-logo" />
+      <div class="brand-text">
+        <div class="brand-school">Casa Salesiana Juan Segundo Fernández · Obra de Don Bosco</div>
+        <div class="brand-name">Torneo Ciclo Superior</div>
+      </div>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <button data-section="posiciones" class="active">Posiciones</button>
+      <button data-section="resultados">Resultados</button>
+      <button data-section="fixture">Fixture</button>
+      <button data-section="goleadores">Goleadores</button>
+      <button data-section="planteles">Planteles</button>
+      <button data-section="avisos">Avisos</button>
+      <button data-section="inscripcion">Inscripción</button>
+    </nav>
+  </div>
+  <div class="banner" id="suspensionBanner">
+    <div class="banner-inner">
+      <span class="banner-icon">🌧️</span>
+      <div class="banner-text">
+        <strong id="bannerTitle"></strong>
+        <span id="bannerMessage"></span>
+      </div>
+      <button class="banner-close" id="bannerClose" aria-label="Cerrar aviso">✕</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <span class="pill">⚽ Ciclo Superior · Temporada 2026</span>
+  <h1>Torneo de Fútbol Escolar</h1>
+  <p>Seguí las posiciones, resultados, próximos partidos y goleadores del torneo interno de Ciclo Superior de nuestro colegio.</p>
+</section>
+
+<main class="container">
+
+  <!-- ===================== POSICIONES ===================== -->
+  <section class="section active panel" id="sec-posiciones">
+    <div class="section-title">
+      <h2>🏆 Tabla de posiciones</h2>
+      <span class="badge" id="standingsBadge">—</span>
+    </div>
+    <div id="standingsContainer">
+      <div class="skeleton" style="height:180px"></div>
+    </div>
+  </section>
+
+  <!-- ===================== RESULTADOS ===================== -->
+  <section class="section panel" id="sec-resultados">
+    <div class="section-title">
+      <h2>📊 Resultados</h2>
+      <span class="badge" id="resultsBadge">—</span>
+    </div>
+    <div id="resultsContainer" class="match-grid">
+      <div class="skeleton" style="height:100px"></div>
+    </div>
+  </section>
+
+  <!-- ===================== FIXTURE ===================== -->
+  <section class="section panel" id="sec-fixture">
+    <div class="section-title">
+      <h2>📅 Próximos partidos</h2>
+      <span class="badge" id="fixtureBadge">—</span>
+    </div>
+    <div id="fixtureContainer" class="match-grid">
+      <div class="skeleton" style="height:100px"></div>
+    </div>
+  </section>
+
+  <!-- ===================== GOLEADORES ===================== -->
+  <section class="section panel" id="sec-goleadores">
+    <div class="section-title">
+      <h2>⚽ Tabla de goleadores</h2>
+      <span class="badge" id="scorersBadge">—</span>
+    </div>
+    <div id="scorersContainer">
+      <div class="skeleton" style="height:180px"></div>
+    </div>
+  </section>
+
+  <!-- ===================== PLANTELES ===================== -->
+  <section class="section panel" id="sec-planteles">
+    <div class="section-title">
+      <h2>👥 Planteles</h2>
+      <span class="badge" id="rosterBadge">—</span>
+    </div>
+    <div class="team-chips" id="teamChips"></div>
+    <div id="rosterContainer">
+      <div class="empty-state">
+        <div class="icon-big">👈</div>
+        Elegí un equipo para ver su plantel.
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== AVISOS ===================== -->
+  <section class="section panel" id="sec-avisos">
+    <div class="section-title">
+      <h2>📣 Avisos del torneo</h2>
+      <span class="badge" id="announceBadge">—</span>
+    </div>
+    <div id="announceContainer" class="announce-list">
+      <div class="skeleton" style="height:60px"></div>
+    </div>
+  </section>
+
+  <!-- ===================== INSCRIPCIÓN ===================== -->
+  <section class="section panel" id="sec-inscripcion">
+    <div class="section-title">
+      <h2>📝 Inscripción de equipos</h2>
+    </div>
+
+    <!-- Paso 1: login -->
+    <div id="authStep">
+      <div class="gate-card">
+        <div class="icon-big">🔐</div>
+        <h3>Ingresá con tu mail institucional</h3>
+        <p>Solo se aceptan direcciones <strong>@csjsf.edu.ar</strong> o <strong>@jsfernandez.org</strong>. Te vamos a enviar un enlace mágico para confirmar tu identidad, sin necesidad de contraseña.</p>
+        <div class="form-grid" style="margin-top:18px; text-align:left;">
+          <div class="form-row">
+            <label for="loginEmail">Mail institucional</label>
+            <input type="email" id="loginEmail" placeholder="nombre.apellido@csjsf.edu.ar" />
+          </div>
+          <button class="btn btn-primary btn-block" id="sendMagicLink">Enviar enlace de acceso</button>
+        </div>
+        <div class="alert" id="authAlert"></div>
+      </div>
+    </div>
+
+    <!-- Paso 2: formulario de inscripción (oculto hasta login) -->
+    <div id="registerStep" style="display:none;">
+      <div class="session-chip">
+        <span class="dot"></span>
+        Sesión iniciada como <strong>&nbsp;<span id="sessionEmail"></span></strong>
+        &nbsp;·&nbsp;<button class="btn btn-outline btn-sm" id="logoutBtn" style="margin-left:8px;">Cerrar sesión</button>
+      </div>
+
+      <div id="teamStatus"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  Casa Salesiana Juan Segundo Fernández · Obra de Don Bosco — Torneo de Fútbol Ciclo Superior<br />
+  <a href="admin.html" style="opacity:.6;">Acceso organizadores</a>
+</footer>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
