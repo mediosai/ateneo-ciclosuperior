@@ -244,146 +244,86 @@ async function loadScorers() {
 }
 
 /* ============================================================
-   Inscripción - Auth por mail institucional
+   Inscripción - formulario directo, sin login ni verificación de mail
    ============================================================ */
-const authAlert = document.getElementById('authAlert');
 function showAlert(el, type, msg) {
   el.className = `alert show alert-${type}`;
   el.textContent = msg;
 }
 
-document.getElementById('sendMagicLink').addEventListener('click', async () => {
-  const emailInput = document.getElementById('loginEmail');
-  const email = emailInput.value.trim();
-  if (!isSchoolEmail(email)) {
-    showAlert(authAlert, 'error', 'Usá tu mail institucional @csjsf.edu.ar o @jsfernandez.org.');
-    return;
-  }
-  const btn = document.getElementById('sendMagicLink');
-  btn.disabled = true;
-  btn.textContent = 'Enviando...';
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.href.split('#')[0] + '#inscripcion' }
-  });
-  btn.disabled = false;
-  btn.textContent = 'Enviar enlace de acceso';
-  if (error) {
-    showAlert(authAlert, 'error', 'No se pudo enviar el enlace: ' + error.message);
-  } else {
-    showAlert(authAlert, 'success', `Te enviamos un enlace a ${email}. Abrilo desde este mismo dispositivo para continuar.`);
-  }
-});
+let pendingPlayers = [];
 
-document.getElementById('logoutBtn').addEventListener('click', async () => {
-  await supabase.auth.signOut();
-  renderAuthState(null);
-});
-
-async function renderAuthState(session) {
-  const authStep = document.getElementById('authStep');
-  const registerStep = document.getElementById('registerStep');
-  if (!session) {
-    authStep.style.display = '';
-    registerStep.style.display = 'none';
-    return;
-  }
-  authStep.style.display = 'none';
-  registerStep.style.display = '';
-  document.getElementById('sessionEmail').textContent = session.user.email;
-  await renderTeamPanel(session);
-}
-
-async function renderTeamPanel(session) {
-  const container = document.getElementById('teamStatus');
-  container.innerHTML = `<div class="skeleton" style="height:120px"></div>`;
-
-  const { data: myTeam } = await supabase.from('teams').select('*').eq('captain_user_id', session.user.id).maybeSingle();
-
-  if (!myTeam) {
-    container.innerHTML = `
-      <div class="panel" style="box-shadow:none; padding:0; border:none;">
-        <h3 style="margin-top:0;">Inscribí a tu equipo</h3>
-        <div class="form-grid">
-          <div class="two-col">
-            <div class="form-row">
-              <label for="teamNameInput">Nombre del equipo</label>
-              <input id="teamNameInput" placeholder="Ej: Los Tigres" />
-            </div>
-            <div class="form-row">
-              <label for="teamCourseInput">Curso</label>
-              <input id="teamCourseInput" placeholder="Ej: 5° Año A" />
-            </div>
-          </div>
-          <button class="btn btn-primary" id="createTeamBtn">Crear equipo</button>
-        </div>
-        <div class="alert" id="teamAlert"></div>
-      </div>`;
-    document.getElementById('createTeamBtn').addEventListener('click', async () => {
-      const name = document.getElementById('teamNameInput').value.trim();
-      const course = document.getElementById('teamCourseInput').value.trim();
-      const alertEl = document.getElementById('teamAlert');
-      if (!name || !course) { showAlert(alertEl, 'error', 'Completá nombre del equipo y curso.'); return; }
-      const { error } = await supabase.from('teams').insert({
-        name, course, captain_email: session.user.email, captain_user_id: session.user.id
-      });
-      if (error) { showAlert(alertEl, 'error', 'Error al crear el equipo: ' + error.message); return; }
-      renderTeamPanel(session);
-      loadStandings();
-    });
-    return;
-  }
-
-  await renderPlayersPanel(myTeam);
-}
-
-async function renderPlayersPanel(team) {
-  const container = document.getElementById('teamStatus');
-  const { data: players } = await supabase.from('players').select('*').eq('team_id', team.id).order('created_at');
-
-  container.innerHTML = `
-    <div class="panel" style="box-shadow:none; padding:0; border:none;">
-      <h3 style="margin-top:0;">Equipo: ${team.name} <span class="badge">${team.course}</span></h3>
-      <p style="color:var(--text-dim); font-size:13.5px;">Agregá los jugadores del plantel completando nombre, apellido y curso.</p>
-
-      <div id="playersList">
-        ${players && players.length ? players.map(p => `
-          <div class="player-row" data-id="${p.id}">
-            <div class="form-row"><label>Nombre</label><input value="${p.first_name}" disabled /></div>
-            <div class="form-row"><label>Apellido</label><input value="${p.last_name}" disabled /></div>
-            <div class="form-row"><label>Curso</label><input value="${p.course}" disabled /></div>
-            <button class="remove-player" title="Quitar jugador" data-player="${p.id}">✕</button>
-          </div>`).join('') : ''}
-      </div>
-
-      <h4 style="margin-bottom:8px;">Agregar jugador/a</h4>
-      <div class="player-row">
-        <div class="form-row"><label>Nombre</label><input id="newFirstName" placeholder="Nombre" /></div>
-        <div class="form-row"><label>Apellido</label><input id="newLastName" placeholder="Apellido" /></div>
-        <div class="form-row"><label>Curso</label><input id="newCourse" placeholder="Curso" value="${team.course}" /></div>
-        <button class="btn btn-primary btn-sm" id="addPlayerBtn">+ Agregar</button>
-      </div>
-      <div class="alert" id="playersAlert"></div>
-    </div>`;
-
-  document.getElementById('addPlayerBtn').addEventListener('click', async () => {
-    const first_name = document.getElementById('newFirstName').value.trim();
-    const last_name = document.getElementById('newLastName').value.trim();
-    const course = document.getElementById('newCourse').value.trim();
-    const alertEl = document.getElementById('playersAlert');
-    if (!first_name || !last_name || !course) { showAlert(alertEl, 'error', 'Completá nombre, apellido y curso.'); return; }
-    const { error } = await supabase.from('players').insert({ team_id: team.id, first_name, last_name, course });
-    if (error) { showAlert(alertEl, 'error', 'Error al agregar: ' + error.message); return; }
-    renderPlayersPanel(team);
-  });
-
-  container.querySelectorAll('.remove-player').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      await supabase.from('players').delete().eq('id', btn.dataset.player);
-      renderPlayersPanel(team);
+function renderPendingPlayers() {
+  const list = document.getElementById('playersList');
+  list.innerHTML = pendingPlayers.map((p, i) => `
+    <div class="player-row">
+      <div class="form-row"><label>Nombre</label><input value="${p.first_name}" disabled /></div>
+      <div class="form-row"><label>Apellido</label><input value="${p.last_name}" disabled /></div>
+      <div class="form-row"><label>Curso</label><input value="${p.course}" disabled /></div>
+      <button class="remove-player" type="button" title="Quitar jugador" data-i="${i}">✕</button>
+    </div>`).join('');
+  list.querySelectorAll('.remove-player').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingPlayers.splice(parseInt(btn.dataset.i), 1);
+      renderPendingPlayers();
     });
   });
 }
+
+document.getElementById('addPlayerBtn').addEventListener('click', () => {
+  const first_name = document.getElementById('newFirstName').value.trim();
+  const last_name = document.getElementById('newLastName').value.trim();
+  const course = document.getElementById('newCourse').value.trim();
+  const alertEl = document.getElementById('teamAlert');
+  if (!first_name || !last_name || !course) { showAlert(alertEl, 'error', 'Completá nombre, apellido y curso del jugador antes de agregarlo.'); return; }
+  pendingPlayers.push({ first_name, last_name, course });
+  document.getElementById('newFirstName').value = '';
+  document.getElementById('newLastName').value = '';
+  document.getElementById('newCourse').value = '';
+  renderPendingPlayers();
+});
+
+document.getElementById('submitTeamBtn').addEventListener('click', async () => {
+  const name = document.getElementById('teamNameInput').value.trim();
+  const course = document.getElementById('teamCourseInput').value.trim();
+  const captain_email = document.getElementById('teamEmailInput').value.trim();
+  const alertEl = document.getElementById('teamAlert');
+
+  if (!name || !course) { showAlert(alertEl, 'error', 'Completá nombre del equipo y curso.'); return; }
+  if (!isSchoolEmail(captain_email)) { showAlert(alertEl, 'error', 'Usá un mail institucional @csjsf.edu.ar o @jsfernandez.org.'); return; }
+  if (!pendingPlayers.length) { showAlert(alertEl, 'error', 'Agregá al menos un jugador antes de inscribir el equipo.'); return; }
+
+  const btn = document.getElementById('submitTeamBtn');
+  btn.disabled = true; btn.textContent = 'Inscribiendo...';
+
+  const { data: team, error: teamError } = await supabase.from('teams')
+    .insert({ name, course, captain_email })
+    .select().single();
+
+  if (teamError) {
+    btn.disabled = false; btn.textContent = 'Inscribir equipo';
+    showAlert(alertEl, 'error', 'Error al inscribir el equipo: ' + teamError.message);
+    return;
+  }
+
+  const { error: playersError } = await supabase.from('players')
+    .insert(pendingPlayers.map(p => ({ ...p, team_id: team.id })));
+
+  btn.disabled = false; btn.textContent = 'Inscribir equipo';
+
+  if (playersError) {
+    showAlert(alertEl, 'error', 'El equipo se creó, pero hubo un error al cargar los jugadores: ' + playersError.message);
+    return;
+  }
+
+  showAlert(alertEl, 'success', `¡Listo! ${name} quedó inscripto con ${pendingPlayers.length} jugador${pendingPlayers.length === 1 ? '' : 'es'}.`);
+  document.getElementById('teamNameInput').value = '';
+  document.getElementById('teamCourseInput').value = '';
+  document.getElementById('teamEmailInput').value = '';
+  pendingPlayers = [];
+  renderPendingPlayers();
+  loadStandings();
+});
 
 /* ============================================================
    Boot
@@ -394,12 +334,6 @@ async function boot() {
   loadStandings();
   loadMatches();
   loadScorers();
-
-  const { data: { session } } = await supabase.auth.getSession();
-  renderAuthState(session);
-
-  supabase.auth.onAuthStateChange((_event, session) => {
-    renderAuthState(session);
-  });
+  renderPendingPlayers();
 }
 boot();

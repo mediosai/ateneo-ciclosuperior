@@ -103,32 +103,39 @@
       <h2>📝 Inscripción de equipos</h2>
     </div>
 
-    <!-- Paso 1: login -->
-    <div id="authStep">
-      <div class="gate-card">
-        <div class="icon-big">🔐</div>
-        <h3>Ingresá con tu mail institucional</h3>
-        <p>Solo se aceptan direcciones <strong>@csjsf.edu.ar</strong> o <strong>@jsfernandez.org</strong>. Te vamos a enviar un enlace mágico para confirmar tu identidad, sin necesidad de contraseña.</p>
-        <div class="form-grid" style="margin-top:18px; text-align:left;">
+    <div id="registerStep">
+      <p style="color:var(--text-dim); font-size:13.5px; margin-top:-6px;">
+        Completá los datos del equipo y de los jugadores, y enviá el formulario. El mail de contacto tiene que ser institucional (<strong>@csjsf.edu.ar</strong> o <strong>@jsfernandez.org</strong>).
+      </p>
+
+      <div class="form-grid">
+        <div class="two-col">
           <div class="form-row">
-            <label for="loginEmail">Mail institucional</label>
-            <input type="email" id="loginEmail" placeholder="nombre.apellido@csjsf.edu.ar" />
+            <label for="teamNameInput">Nombre del equipo</label>
+            <input id="teamNameInput" placeholder="Ej: Los Tigres" />
           </div>
-          <button class="btn btn-primary btn-block" id="sendMagicLink">Enviar enlace de acceso</button>
+          <div class="form-row">
+            <label for="teamCourseInput">Curso</label>
+            <input id="teamCourseInput" placeholder="Ej: 5° Año A" />
+          </div>
         </div>
-        <div class="alert" id="authAlert"></div>
-      </div>
-    </div>
-
-    <!-- Paso 2: formulario de inscripción (oculto hasta login) -->
-    <div id="registerStep" style="display:none;">
-      <div class="session-chip">
-        <span class="dot"></span>
-        Sesión iniciada como <strong>&nbsp;<span id="sessionEmail"></span></strong>
-        &nbsp;·&nbsp;<button class="btn btn-outline btn-sm" id="logoutBtn" style="margin-left:8px;">Cerrar sesión</button>
+        <div class="form-row">
+          <label for="teamEmailInput">Mail de contacto del equipo</label>
+          <input type="email" id="teamEmailInput" placeholder="nombre.apellido@csjsf.edu.ar" />
+        </div>
       </div>
 
-      <div id="teamStatus"></div>
+      <h4 style="margin:20px 0 8px;">Jugadores</h4>
+      <div id="playersList"></div>
+      <div class="player-row">
+        <div class="form-row"><label>Nombre</label><input id="newFirstName" placeholder="Nombre" /></div>
+        <div class="form-row"><label>Apellido</label><input id="newLastName" placeholder="Apellido" /></div>
+        <div class="form-row"><label>Curso</label><input id="newCourse" placeholder="Curso" /></div>
+        <button class="btn btn-outline btn-sm" id="addPlayerBtn" type="button">+ Agregar</button>
+      </div>
+
+      <button class="btn btn-primary" id="submitTeamBtn" style="margin-top:18px;">Inscribir equipo</button>
+      <div class="alert" id="teamAlert"></div>
     </div>
   </section>
 
