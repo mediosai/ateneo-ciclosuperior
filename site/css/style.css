@@ -60,9 +60,15 @@ button { font-family: inherit; cursor: pointer; }
   position: sticky;
   top: 0;
   z-index: 50;
-  background: linear-gradient(135deg, var(--navy), var(--blue-dark));
+  background: linear-gradient(135deg, rgba(13, 27, 48, .82), rgba(18, 41, 74, .82));
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
   color: #fff;
   box-shadow: var(--shadow-sm);
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .app-header { background: linear-gradient(135deg, var(--navy), var(--blue-dark)); }
 }
 .header-inner {
   max-width: 1180px;
@@ -126,6 +132,7 @@ button { font-family: inherit; cursor: pointer; }
   position: relative;
 }
 .main-nav button:hover { background: rgba(255,255,255,.08); color: #fff; }
+.main-nav button:active { transform: scale(.97); transition: transform .1s ease-out; }
 .main-nav button.active {
   background: var(--gold);
   color: var(--navy);
@@ -193,6 +200,8 @@ button { font-family: inherit; cursor: pointer; }
   font-size: clamp(26px, 4vw, 40px);
   margin: 0 0 10px;
   font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
 }
 .hero p {
   color: #cdd6e8;
@@ -409,7 +418,7 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
   font-size: 14.5px;
   transition: transform .2s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
 }
-.btn:active { transform: scale(.97); }
+.btn:active { transform: scale(.97); transition: transform .1s ease-out; }
 .btn-primary {
   background: linear-gradient(135deg, var(--gold), var(--gold-dark));
   color: #3a2a02;
@@ -481,6 +490,7 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
 }
 .team-chip:hover { border-color: var(--gold); color: var(--text); }
 .team-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.team-chip:active { transform: scale(.95); transition: transform .1s ease-out; }
 
 /* ---------------- Loader / skeleton ---------------- */
 .skeleton {
@@ -611,4 +621,29 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
 @media (max-width: 380px) {
   .brand-school { display: none; }
   .hero h1 { font-size: 22px; }
+}
+
+/* =========================================================
+   Movimiento reducido — respeta la preferencia del sistema
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .section.active { animation: none; }
+  .banner-icon { animation: none; }
+  .skeleton { animation: none; background: var(--surface-2); }
+  .brand:hover .brand-logo { transform: none; }
+  .btn:active, .team-chip:active, .main-nav button:active { transform: none; }
+  .match-card:hover, .announce-item:hover { transform: none; }
+}
+
+@media (prefers-contrast: more) {
+  :root { --border: #8a93a8; }
+  .panel, .match-card, .announce-item, .form-row input, .form-row select {
+    border-width: 2px;
+  }
 }
