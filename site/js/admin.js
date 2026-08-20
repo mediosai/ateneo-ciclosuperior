@@ -334,7 +334,7 @@ document.getElementById('uploadPhotoBtn').addEventListener('click', async () => 
   const file = fileInput.files?.[0];
 
   if (!file) { showAlert(alertEl, 'error', 'Elegí una foto para subir.'); return; }
-  if (file.size > 8 * 1024 * 1024) { showAlert(alertEl, 'error', 'La foto pesa más de 8MB.'); return; }
+  if (file.size > 20 * 1024 * 1024) { showAlert(alertEl, 'error', 'La foto pesa más de 20MB.'); return; }
 
   const btn = document.getElementById('uploadPhotoBtn');
   btn.disabled = true; btn.textContent = 'Subiendo...';
