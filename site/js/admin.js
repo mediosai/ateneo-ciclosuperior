@@ -42,7 +42,6 @@ async function checkAdminAndBoot(session) {
   }
   loginPanel.style.display = 'none';
   dashboard.style.display = '';
-  document.getElementById('adminEmailChip').textContent = session.user.email;
 
   const { data: adminRow } = await supabase.from('admins').select('*').eq('user_id', session.user.id).maybeSingle();
 
@@ -101,19 +100,114 @@ document.getElementById('publishAnnBtn').addEventListener('click', async () => {
   loadAdminAnnouncements();
 });
 
-/* ---------------- Equipos ---------------- */
+/* ---------------- Equipos: lista deslizable (editar / eliminar) ---------------- */
 async function loadAdminTeams() {
   await loadTeamsIntoState();
   document.getElementById('teamsCountBadge').textContent = `${TEAMS.length} equipo${TEAMS.length === 1 ? '' : 's'}`;
   const el = document.getElementById('adminTeamsList');
-  if (!TEAMS.length) { el.innerHTML = `<div class="empty-state">Todavía no se inscribió ningún equipo.</div>`; }
-  else {
-    el.innerHTML = `<table>
-      <thead><tr><th>Equipo</th><th>Curso</th><th>Capitán</th><th>Inscripto</th></tr></thead>
-      <tbody>${TEAMS.map(t => `<tr><td class="team-name" data-label="Equipo">${t.name}</td><td data-label="Curso">${t.course}</td><td data-label="Capitán">${t.captain_email}</td><td data-label="Inscripto">${new Date(t.created_at).toLocaleDateString('es-AR')}</td></tr>`).join('')}</tbody>
-    </table>`;
+
+  if (!TEAMS.length) {
+    el.innerHTML = `<div class="empty-state">Todavía no se inscribió ningún equipo.</div>`;
+    fillTeamSelects();
+    return;
   }
+
+  el.innerHTML = TEAMS.map(t => `
+    <div class="swipe-item" data-id="${t.id}">
+      <div class="swipe-actions">
+        <button class="swipe-action edit" data-action="edit">Editar</button>
+        <button class="swipe-action delete" data-action="delete">Eliminar</button>
+      </div>
+      <div class="swipe-content">
+        <div class="swipe-main">
+          <strong>${t.name}</strong> <span class="badge">${t.course}</span>
+          <div class="swipe-sub">${t.captain_email} · inscripto el ${new Date(t.created_at).toLocaleDateString('es-AR')}</div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  attachSwipeHandlers();
   fillTeamSelects();
+}
+
+const ACTIONS_WIDTH = 156; // 78px x 2 botones
+
+function closeAllSwipes(except) {
+  document.querySelectorAll('.swipe-content').forEach(c => {
+    if (c !== except) { c.style.transition = 'transform .25s var(--ease)'; c.style.transform = 'translateX(0)'; }
+  });
+}
+
+function attachSwipeHandlers() {
+  document.querySelectorAll('.swipe-item').forEach(item => {
+    const content = item.querySelector('.swipe-content');
+    const teamId = item.dataset.id;
+    let startX = 0, openX = 0, dragging = false, moved = false;
+
+    function setX(x, animate) {
+      x = Math.max(-ACTIONS_WIDTH, Math.min(0, x));
+      content.style.transition = animate ? 'transform .25s var(--ease)' : 'none';
+      content.style.transform = `translateX(${x}px)`;
+      openX = x;
+    }
+
+    content.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.swipe-edit-form')) return; // no arrastrar mientras se edita
+      dragging = true; moved = false;
+      startX = e.clientX;
+      try { content.setPointerCapture(e.pointerId); } catch (_) {}
+      closeAllSwipes(content);
+    });
+    content.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      if (Math.abs(dx) > 4) moved = true;
+      setX(openX + dx, false);
+      startX = e.clientX;
+    });
+    function endDrag() {
+      if (!dragging) return;
+      dragging = false;
+      setX(openX < -ACTIONS_WIDTH / 2 ? -ACTIONS_WIDTH : 0, true);
+    }
+    content.addEventListener('pointerup', endDrag);
+    content.addEventListener('pointercancel', endDrag);
+
+    item.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+      const team = TEAMS.find(t => t.id === teamId);
+      if (!confirm(`¿Eliminar el equipo "${team?.name || ''}" y sus jugadores? Esta acción no se puede deshacer.`)) return;
+      await supabase.from('teams').delete().eq('id', teamId);
+      loadAdminTeams();
+    });
+
+    item.querySelector('[data-action="edit"]').addEventListener('click', () => {
+      const team = TEAMS.find(t => t.id === teamId);
+      if (!team) return;
+      setX(0, true);
+      content.innerHTML = `
+        <div class="swipe-edit-form">
+          <div class="two-col">
+            <div class="form-row"><label>Nombre</label><input class="edit-name" value="${team.name}" /></div>
+            <div class="form-row"><label>Curso</label><input class="edit-course" value="${team.course}" /></div>
+          </div>
+          <div class="form-row"><label>Mail de contacto</label><input class="edit-email" value="${team.captain_email}" /></div>
+          <div class="swipe-edit-actions">
+            <button class="btn btn-primary btn-sm edit-save">Guardar</button>
+            <button class="btn btn-outline btn-sm edit-cancel">Cancelar</button>
+          </div>
+        </div>`;
+      content.querySelector('.edit-cancel').addEventListener('click', () => loadAdminTeams());
+      content.querySelector('.edit-save').addEventListener('click', async () => {
+        const name = content.querySelector('.edit-name').value.trim();
+        const course = content.querySelector('.edit-course').value.trim();
+        const captain_email = content.querySelector('.edit-email').value.trim();
+        if (!name || !course || !captain_email) return;
+        const { error } = await supabase.from('teams').update({ name, course, captain_email }).eq('id', teamId);
+        if (error) { alert('Error al guardar: ' + error.message); return; }
+        loadAdminTeams();
+      });
+    });
+  });
 }
 
 function fillTeamSelects() {

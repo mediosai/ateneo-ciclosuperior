@@ -48,16 +48,7 @@
   <!-- ADMIN DASHBOARD -->
   <div id="adminDashboard" style="display:none;">
 
-    <div class="panel">
-      <div class="session-chip">
-        <span class="dot"></span>
-        <span class="session-chip-text">Conectado como <strong id="adminEmailChip"></strong></span>
-        <button class="btn btn-logout btn-sm" id="adminLogout">
-          <span aria-hidden="true">🚪</span> Cerrar sesión
-        </button>
-      </div>
-      <div class="alert" id="notAdminAlert"></div>
-    </div>
+    <div class="alert" id="notAdminAlert"></div>
 
     <div id="adminContent" style="display:none;">
 
@@ -112,7 +103,8 @@
       <!-- Equipos inscriptos -->
       <section class="panel">
         <div class="section-title"><h2>🧾 Equipos inscriptos</h2><span class="badge" id="teamsCountBadge">-</span></div>
-        <div id="adminTeamsList" class="table-wrap"></div>
+        <p style="color:var(--text-dim); font-size:13.5px; margin-top:-8px;">Deslizá cada equipo hacia la izquierda para editarlo o eliminarlo.</p>
+        <div id="adminTeamsList"></div>
       </section>
 
       <!-- Crear / editar partidos -->
@@ -129,15 +121,13 @@
               <select id="matchAway"></select>
             </div>
           </div>
-          <div class="two-col">
-            <div class="form-row">
-              <label for="matchDay">Fecha (jornada Nº)</label>
-              <input id="matchDay" type="number" min="1" value="1" />
-            </div>
-            <div class="form-row">
-              <label for="matchDate">Día</label>
-              <input id="matchDate" type="date" />
-            </div>
+          <div class="form-row">
+            <label for="matchDay">Fecha (jornada Nº)</label>
+            <input id="matchDay" type="number" min="1" value="1" />
+          </div>
+          <div class="form-row">
+            <label for="matchDate">Día</label>
+            <input id="matchDate" type="date" />
           </div>
           <div class="two-col">
             <div class="form-row">
@@ -166,6 +156,10 @@
         <div id="adminMatchesList"></div>
       </section>
 
+    </div>
+
+    <div style="text-align:center; margin: 8px 0 24px;">
+      <button class="btn btn-logout" id="adminLogout">Cerrar sesión</button>
     </div>
   </div>
 

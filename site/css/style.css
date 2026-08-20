@@ -615,6 +615,53 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
 .team-chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
 .team-chip:active { transform: scale(.95); transition: transform .1s ease-out; }
 
+/* ---------------- Input de fecha/hora: respeta el ancho en iOS/Safari ---------------- */
+.form-row input[type="date"],
+.form-row input[type="time"],
+.form-row input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ---------------- Equipos: lista deslizable (editar / eliminar) ---------------- */
+.swipe-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.swipe-actions {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  display: flex;
+}
+.swipe-action {
+  width: 78px;
+  border: none;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.swipe-action.edit { background: var(--blue); }
+.swipe-action.delete { background: var(--red); }
+.swipe-content {
+  position: relative;
+  background: var(--surface);
+  padding: 14px 16px;
+  touch-action: pan-y;
+  user-select: none;
+}
+.swipe-main strong { display: block; font-size: 15px; }
+.swipe-sub { font-size: 12.5px; color: var(--text-dim); margin-top: 4px; }
+.swipe-edit-form { display: grid; gap: 8px; }
+.swipe-edit-form .two-col { gap: 8px; }
+.swipe-edit-actions { display: flex; gap: 8px; }
+.swipe-edit-actions .btn { flex: 1; }
+
 /* ---------------- Fotos (admin) ---------------- */
 .photo-card { padding: 0; overflow: hidden; }
 .photo-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
