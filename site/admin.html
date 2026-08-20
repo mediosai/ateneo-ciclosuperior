@@ -29,13 +29,17 @@
     <div class="gate-card">
       <div class="icon-big">🛡️</div>
       <h3>Acceso de organizadores</h3>
-      <p>Ingresá con tu mail institucional autorizado como administrador del torneo.</p>
+      <p>Ingresá con el usuario y la contraseña de administrador del torneo.</p>
       <div class="form-grid" style="text-align:left; margin-top:14px;">
         <div class="form-row">
-          <label for="adminEmail">Mail institucional</label>
-          <input type="email" id="adminEmail" placeholder="organizador@csjsf.edu.ar" />
+          <label for="adminEmail">Usuario</label>
+          <input type="email" id="adminEmail" placeholder="ateneo@csjsf.edu.ar" autocomplete="username" />
         </div>
-        <button class="btn btn-primary btn-block" id="adminSendLink">Enviar enlace de acceso</button>
+        <div class="form-row">
+          <label for="adminPassword">Contraseña</label>
+          <input type="password" id="adminPassword" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <button class="btn btn-primary btn-block" id="adminSendLink">Iniciar sesión</button>
       </div>
       <div class="alert" id="adminAuthAlert"></div>
     </div>

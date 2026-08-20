@@ -1,4 +1,4 @@
-import { supabase, isSchoolEmail } from './supabaseClient.js';
+import { supabase } from './supabaseClient.js';
 
 function showAlert(el, type, msg) {
   el.className = `alert show alert-${type}`;
@@ -8,19 +8,21 @@ function showAlert(el, type, msg) {
 /* ---------------- Login ---------------- */
 document.getElementById('adminSendLink').addEventListener('click', async () => {
   const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
   const alertEl = document.getElementById('adminAuthAlert');
-  if (!isSchoolEmail(email)) {
-    showAlert(alertEl, 'error', 'Usá tu mail institucional @csjsf.edu.ar o @jsfernandez.org.');
+  if (!email || !password) {
+    showAlert(alertEl, 'error', 'Completá usuario y contraseña.');
     return;
   }
   const btn = document.getElementById('adminSendLink');
-  btn.disabled = true; btn.textContent = 'Enviando...';
-  const { error } = await supabase.auth.signInWithOtp({
-    email, options: { emailRedirectTo: window.location.href }
-  });
-  btn.disabled = false; btn.textContent = 'Enviar enlace de acceso';
-  if (error) showAlert(alertEl, 'error', 'Error: ' + error.message);
-  else showAlert(alertEl, 'success', `Enlace enviado a ${email}. Abrilo desde este dispositivo.`);
+  btn.disabled = true; btn.textContent = 'Ingresando...';
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = 'Iniciar sesión';
+  if (error) showAlert(alertEl, 'error', 'Usuario o contraseña incorrectos.');
+});
+
+document.getElementById('adminPassword').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('adminSendLink').click();
 });
 
 document.getElementById('adminLogout').addEventListener('click', async () => {
@@ -42,15 +44,7 @@ async function checkAdminAndBoot(session) {
   dashboard.style.display = '';
   document.getElementById('adminEmailChip').textContent = session.user.email;
 
-  let { data: adminRow } = await supabase.from('admins').select('*').eq('user_id', session.user.id).maybeSingle();
-
-  if (!adminRow) {
-    const { count } = await supabase.from('admins').select('*', { count: 'exact', head: true });
-    if (count === 0) {
-      const { error } = await supabase.from('admins').insert({ user_id: session.user.id, email: session.user.email });
-      if (!error) adminRow = { user_id: session.user.id, email: session.user.email };
-    }
-  }
+  const { data: adminRow } = await supabase.from('admins').select('*').eq('user_id', session.user.id).maybeSingle();
 
   const notAdminAlert = document.getElementById('notAdminAlert');
   const adminContent = document.getElementById('adminContent');
