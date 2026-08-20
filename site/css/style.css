@@ -19,6 +19,8 @@
   --text-dim: #5b6478;
   --border: #e2e6ee;
   --success: #1f9d55;
+  --accent: var(--blue);
+  --status-danger: var(--red);
   --shadow: 0 10px 30px -12px rgba(13, 27, 48, 0.18);
   --shadow-sm: 0 4px 14px -6px rgba(13, 27, 48, 0.15);
   --radius: 16px;
@@ -33,6 +35,9 @@
     --text: #eef1f7;
     --text-dim: #9aa4ba;
     --border: #24314a;
+    --accent: #7aa2f7;
+    --success: #4ade80;
+    --status-danger: #f87171;
     --shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.5);
   }
 }
@@ -147,6 +152,77 @@ button { font-family: inherit; cursor: pointer; }
   border: none;
   color: #fff;
   font-size: 22px;
+}
+
+/* ---------------- Podio de goleadores ---------------- */
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(10px, 3vw, 24px);
+  padding: 20px 10px 0;
+}
+.podium-place {
+  flex: 1;
+  max-width: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: transform .3s var(--ease);
+}
+.podium-place:hover { transform: translateY(-6px); }
+.podium-place:active { transform: translateY(-6px) scale(.97); transition: transform .1s ease-out; }
+.podium-medal {
+  font-size: 34px;
+  margin-bottom: 6px;
+  transition: transform .35s var(--ease);
+}
+.podium-place.picked .podium-medal { transform: scale(1.25) rotate(-8deg); }
+.podium-goals {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.podium-goals span { display: block; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
+.podium-bar {
+  width: 100%;
+  border-radius: 14px 14px 0 0;
+  padding: 14px 10px;
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .3s var(--ease), filter .3s var(--ease);
+}
+.podium-place:hover .podium-bar { filter: brightness(1.08); }
+.podium-place.picked .podium-bar { box-shadow: 0 0 0 3px var(--gold), var(--shadow-sm); }
+.podium-name { font-weight: 700; font-size: 14px; }
+.podium-detail {
+  font-size: 11.5px;
+  opacity: .85;
+  margin-top: 3px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .3s var(--ease), opacity .3s var(--ease), margin-top .3s var(--ease);
+}
+.podium-place.picked .podium-detail { max-height: 40px; margin-top: 6px; }
+
+.place-1 .podium-bar { height: 132px; background: linear-gradient(160deg, var(--gold), var(--gold-dark)); color: #3a2a02; justify-content: center; display: flex; flex-direction: column; }
+.place-1 .podium-name, .place-1 .podium-detail { color: #3a2a02; }
+.place-2 .podium-bar { height: 100px; background: linear-gradient(160deg, #c3cbdb, #8f9bb3); justify-content: center; display: flex; flex-direction: column; }
+.place-3 .podium-bar { height: 78px; background: linear-gradient(160deg, #d9a066, #a9713a); justify-content: center; display: flex; flex-direction: column; }
+.place-1 { order: 2; }
+.place-2 { order: 1; }
+.place-3 { order: 3; }
+
+@media (max-width: 480px) {
+  .podium { gap: 8px; }
+  .podium-medal { font-size: 26px; }
+  .podium-goals { font-size: 21px; }
+  .podium-name { font-size: 12.5px; }
 }
 
 /* ---------------- Avisos en la portada ---------------- */
@@ -410,7 +486,7 @@ tbody tr:last-child td { border-bottom: none; }
 tbody tr:nth-child(1) .pos-num { background: var(--gold); color: #3a2a02; }
 tbody tr:nth-child(2) .pos-num { background: #d9dee8; color: var(--navy); }
 tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
-.pts-cell { font-weight: 800; color: var(--blue); }
+.pts-cell { font-weight: 800; color: var(--accent); }
 
 /* ---------------- Cards (fixture / results) ---------------- */
 .match-grid {
@@ -445,9 +521,9 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
   font-weight: 700;
   font-size: 10.5px;
 }
-.status-played { background: #dff5e6; color: var(--success); }
-.status-scheduled { background: #e5edff; color: var(--blue); }
-.status-suspended, .status-postponed { background: #fbe2e5; color: var(--red); }
+.status-played { background: rgba(31, 157, 85, .16); color: var(--success); }
+.status-scheduled { background: rgba(122, 162, 247, .16); color: var(--accent); }
+.status-suspended, .status-postponed { background: rgba(168, 31, 45, .16); color: var(--status-danger); }
 .match-teams {
   display: flex;
   align-items: center;
@@ -460,7 +536,7 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
   font-family: 'Poppins', sans-serif;
   font-weight: 800;
   font-size: 20px;
-  color: var(--navy);
+  color: var(--text);
   background: var(--surface-2);
   padding: 4px 12px;
   border-radius: 10px;

@@ -27,7 +27,7 @@ if (hashSection && document.getElementById(`sec-${hashSection}`)) showSection(ha
 const fmtDate = (iso) => {
   if (!iso) return 'A confirmar';
   const d = new Date(iso);
-  return d.toLocaleString('es-AR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString('es-AR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
 };
 const statusLabel = { scheduled: 'Programado', played: 'Jugado', suspended: 'Suspendido', postponed: 'Postergado' };
 
@@ -159,8 +159,7 @@ async function loadStandings() {
     <div class="table-wrap">
       <table class="standings-table">
         <thead><tr>
-          <th>#</th><th class="team-col">Equipo</th><th>Curso</th>
-          <th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+          <th>#</th><th class="team-col">Equipo</th><th>Curso</th><th>Pts</th>
         </tr></thead>
         <tbody>
           ${data.map((t, i) => `
@@ -168,8 +167,6 @@ async function loadStandings() {
               <td data-label="#"><span class="pos-num">${i + 1}</span></td>
               <td class="team-name" data-label="Equipo">${t.name}</td>
               <td data-label="Curso">${t.course}</td>
-              <td data-label="PJ">${t.pj}</td><td data-label="PG">${t.pg}</td><td data-label="PE">${t.pe}</td><td data-label="PP">${t.pp}</td>
-              <td data-label="GF">${t.gf}</td><td data-label="GC">${t.gc}</td><td data-label="DG">${t.dg > 0 ? '+' + t.dg : t.dg}</td>
               <td class="pts-cell" data-label="Pts">${t.pts}</td>
             </tr>`).join('')}
         </tbody>
@@ -221,26 +218,41 @@ async function loadMatches() {
    Goleadores
    ============================================================ */
 async function loadScorers() {
-  const { data } = await supabase.from('top_scorers').select('*').limit(25);
+  const { data } = await supabase.from('top_scorers').select('*');
   const el = document.getElementById('scorersContainer');
-  document.getElementById('scorersBadge').textContent = `${data?.length || 0} jugador${(data?.length || 0) === 1 ? '' : 'es'}`;
-  if (!data || !data.length) { el.innerHTML = `<div class="empty-state"><div class="icon-big">🥅</div>Todavía no hay goles cargados.</div>`; return; }
+  const total = data?.length || 0;
+  document.getElementById('scorersBadge').textContent = `${total} jugador${total === 1 ? '' : 'es'}`;
+  if (!total) { el.innerHTML = `<div class="empty-state"><div class="icon-big">🥅</div>Todavía no hay goles cargados.</div>`; return; }
+
+  const top3 = data.slice(0, 3);
+  const medals = ['🥇', '🥈', '🥉'];
+  const visualOrder = [1, 0, 2]; // 2º, 1º, 3º de izquierda a derecha
+
   el.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>#</th><th>Jugador/a</th><th>Curso</th><th>Equipo</th><th>Goles</th></tr></thead>
-        <tbody>
-          ${data.map((p, i) => `
-            <tr>
-              <td data-label="#"><span class="pos-num">${i + 1}</span></td>
-              <td class="team-name" data-label="Jugador/a">${p.first_name} ${p.last_name}</td>
-              <td data-label="Curso">${p.course}</td>
-              <td data-label="Equipo">${p.team_name}</td>
-              <td class="pts-cell" data-label="Goles">${p.goals}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
+    <div class="podium">
+      ${visualOrder.filter(i => top3[i]).map(i => {
+        const p = top3[i];
+        return `
+        <div class="podium-place place-${i + 1}" tabindex="0" role="button" aria-pressed="false">
+          <div class="podium-medal">${medals[i]}</div>
+          <div class="podium-goals">${p.goals}<span>${p.goals === 1 ? 'gol' : 'goles'}</span></div>
+          <div class="podium-bar">
+            <div class="podium-name">${p.first_name} ${p.last_name}</div>
+            <div class="podium-detail">${p.team_name} · ${p.course}</div>
+          </div>
+        </div>`;
+      }).join('')}
     </div>`;
+
+  el.querySelectorAll('.podium-place').forEach(place => {
+    const toggle = () => {
+      const wasPicked = place.classList.contains('picked');
+      el.querySelectorAll('.podium-place').forEach(p => { p.classList.remove('picked'); p.setAttribute('aria-pressed', 'false'); });
+      if (!wasPicked) { place.classList.add('picked'); place.setAttribute('aria-pressed', 'true'); }
+    };
+    place.addEventListener('click', toggle);
+    place.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  });
 }
 
 /* ============================================================
