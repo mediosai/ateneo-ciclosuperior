@@ -28,6 +28,18 @@ function showSection(name) {
 navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.section)));
 navToggle.addEventListener('click', () => mainNav.classList.toggle('open'));
 
+// Tocar fuera del menú abierto lo cierra. El botón hamburguesa se
+// excluye para que su propio toggle no vuelva a abrirlo enseguida.
+document.addEventListener('pointerdown', (e) => {
+  if (!mainNav.classList.contains('open')) return;
+  if (mainNav.contains(e.target) || navToggle.contains(e.target)) return;
+  mainNav.classList.remove('open');
+});
+// Y con Escape, para quien navega con teclado
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') mainNav.classList.remove('open');
+});
+
 // Logo/nombre del colegio: vuelve al inicio.
 // El enlace apunta a index.html, asi que aunque este JS no llegue a
 // cargar (cache vieja, error de red), tocarlo igual vuelve al home.

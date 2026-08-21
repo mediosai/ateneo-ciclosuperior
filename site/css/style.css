@@ -191,14 +191,17 @@ button { font-family: inherit; cursor: pointer; }
 .rain-ball svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 10px rgba(13,27,48,.28)); }
 
 /* Cae, pica fuerte, y va perdiendo altura en cada rebote */
+/* Ojo con la opacidad: si solo se declara en el 100%, el navegador la
+   interpola desde el arranque y la pelota cae medio transparente. Hay
+   que sostenerla en 1 y recién soltarla sobre el final. */
 @keyframes wcFall {
-  0%   { transform: translate3d(0, -25vh, 0); animation-timing-function: cubic-bezier(.55, .05, .95, .4); }
+  0%   { opacity: 1; transform: translate3d(0, -25vh, 0); animation-timing-function: cubic-bezier(.55, .05, .95, .4); }
   38%  { transform: translate3d(calc(var(--drift, 0px) * .35), var(--ground), 0); animation-timing-function: cubic-bezier(.15, .6, .35, 1); }
   54%  { transform: translate3d(calc(var(--drift, 0px) * .6), calc(var(--ground) - 26vh), 0); animation-timing-function: cubic-bezier(.55, .05, .95, .4); }
   70%  { transform: translate3d(calc(var(--drift, 0px) * .8), var(--ground), 0); animation-timing-function: cubic-bezier(.15, .6, .35, 1); }
   82%  { transform: translate3d(calc(var(--drift, 0px) * .92), calc(var(--ground) - 9vh), 0); animation-timing-function: cubic-bezier(.55, .05, .95, .4); }
-  92%  { transform: translate3d(var(--drift, 0px), var(--ground), 0); }
-  100% { transform: translate3d(var(--drift, 0px), var(--ground), 0); opacity: 0; }
+  92%  { opacity: 1; transform: translate3d(var(--drift, 0px), var(--ground), 0); }
+  100% { opacity: 0; transform: translate3d(var(--drift, 0px), var(--ground), 0); }
 }
 /* El giro se frena a medida que la pelota pierde energía */
 @keyframes wcSpin {
