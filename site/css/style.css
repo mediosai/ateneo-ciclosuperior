@@ -160,7 +160,7 @@ button { font-family: inherit; cursor: pointer; }
 .ball-rain {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 9999; /* por delante de todo, incluido el header */
   pointer-events: none;
   overflow: hidden;
 }
@@ -174,16 +174,19 @@ button { font-family: inherit; cursor: pointer; }
   /* Piso: justo sobre el borde inferior de la pantalla */
   --ground: calc(100vh - var(--size, 40px) - 8px);
   will-change: transform;
-  animation: wcFall var(--dur, 3.4s) linear var(--delay, 0s) forwards;
+  /* 'both' y no 'forwards': durante la demora inicial tiene que valer
+     ya el primer fotograma (arriba de la pantalla). Con 'forwards' la
+     pelota quedaba quieta y visible en el borde superior hasta arrancar. */
+  animation: wcFall var(--dur, 3.4s) linear var(--delay, 0s) both;
 }
 .rb-spin {
   width: 100%; height: 100%;
-  animation: wcSpin var(--dur, 3.4s) cubic-bezier(.25, .6, .3, 1) var(--delay, 0s) forwards;
+  animation: wcSpin var(--dur, 3.4s) cubic-bezier(.25, .6, .3, 1) var(--delay, 0s) both;
 }
 .rb-squash {
   width: 100%; height: 100%;
   transform-origin: 50% 100%; /* se achata contra el piso, no en el centro */
-  animation: wcSquash var(--dur, 3.4s) linear var(--delay, 0s) forwards;
+  animation: wcSquash var(--dur, 3.4s) linear var(--delay, 0s) both;
 }
 .rain-ball svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 10px rgba(13,27,48,.28)); }
 

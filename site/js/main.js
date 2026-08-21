@@ -465,12 +465,15 @@ function lloverPelotas(goles) {
     pelota.style.left = `calc(${(carril * 100).toFixed(1)}% - ${tam / 2}px)`;
     pelota.style.setProperty('--size', `${tam}px`);
     pelota.style.setProperty('--dur', `${azar(3.1, 4.1).toFixed(2)}s`);
-    pelota.style.setProperty('--delay', `${azar(0, 0.8).toFixed(2)}s`);
+    // Demora corta: caen casi juntas, apenas escalonadas
+    pelota.style.setProperty('--delay', `${azar(0, 0.25).toFixed(2)}s`);
     pelota.style.setProperty('--drift', `${azar(-50, 50).toFixed(0)}px`);
     pelota.style.setProperty('--spin', `${azar(-540, 540).toFixed(0)}deg`);
+    // El <use> lleva x/y/width/height explícitos: sin eso el símbolo se
+    // ancla en (0,0) del viewBox y solo se ve un cuarto de la pelota.
     pelota.innerHTML =
       `<div class="rb-spin"><div class="rb-squash">` +
-      `<svg viewBox="-30 -30 60 60"><use href="#${modelos[i]}" /></svg>` +
+      `<svg viewBox="-30 -30 60 60"><use href="#${modelos[i]}" x="-30" y="-30" width="60" height="60" /></svg>` +
       `</div></div>`;
     pelota.addEventListener('animationend', () => pelota.remove());
     capa.appendChild(pelota);
