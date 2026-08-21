@@ -156,7 +156,41 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 22px;
 }
 
+/* ---------------- Lluvia de pelotas (podio) ---------------- */
+.ball-rain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  overflow: hidden;
+}
+.rain-ball {
+  position: absolute;
+  top: 0;
+  width: var(--size, 40px);
+  height: var(--size, 40px);
+  will-change: transform;
+  animation: ballFall var(--dur, 2.8s) cubic-bezier(.45, .05, .75, .6) var(--delay, 0s) forwards;
+}
+.rain-ball svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 10px rgba(13,27,48,.28)); }
+@keyframes ballFall {
+  from { transform: translate3d(0, -20vh, 0) rotate(0deg); }
+  to   { transform: translate3d(var(--drift, 0px), 115vh, 0) rotate(var(--spin, 540deg)); }
+}
+
 /* ---------------- Podio de goleadores ---------------- */
+.podium-hint {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin: 18px 0 0;
+}
+.podium-place:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
 .podium {
   display: flex;
   align-items: flex-end;

@@ -375,27 +375,69 @@ async function loadScorers() {
     <div class="podium">
       ${visualOrder.filter(i => top3[i]).map(i => {
         const p = top3[i];
+        const nombre = `${esc(p.first_name)} ${esc(p.last_name)}`;
         return `
-        <div class="podium-place place-${i + 1}" tabindex="0" role="button" aria-pressed="false">
+        <div class="podium-place place-${i + 1}" tabindex="0" role="button"
+             data-goals="${p.goals}"
+             aria-label="${nombre}, ${p.goals} ${p.goals === 1 ? 'gol' : 'goles'}. Tocá para verlos caer.">
           <div class="podium-medal">${medals[i]}</div>
           <div class="podium-goals">${p.goals}<span>${p.goals === 1 ? 'gol' : 'goles'}</span></div>
           <div class="podium-bar">
-            <div class="podium-name">${esc(p.first_name)} ${esc(p.last_name)}</div>
+            <div class="podium-name">${nombre}</div>
             <div class="podium-detail">${esc(p.team_name)}</div>
           </div>
         </div>`;
       }).join('')}
-    </div>`;
+    </div>
+    <p class="podium-hint">Tocá a cada goleador y mirá caer una pelota por cada gol.</p>`;
 
   el.querySelectorAll('.podium-place').forEach(place => {
-    const toggle = () => {
-      const wasPicked = place.classList.contains('picked');
-      el.querySelectorAll('.podium-place').forEach(p => { p.classList.remove('picked'); p.setAttribute('aria-pressed', 'false'); });
-      if (!wasPicked) { place.classList.add('picked'); place.setAttribute('aria-pressed', 'true'); }
+    const activar = () => {
+      // La medalla salta mientras caen las pelotas: refuerza qué se tocó
+      el.querySelectorAll('.podium-place').forEach(p => p.classList.remove('picked'));
+      place.classList.add('picked');
+      lloverPelotas(parseInt(place.dataset.goals, 10));
     };
-    place.addEventListener('click', toggle);
-    place.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    place.addEventListener('click', activar);
+    place.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
+    });
   });
+}
+
+/* ============================================================
+   Lluvia de pelotas: una por cada gol del jugador tocado
+   ============================================================ */
+const MAX_PELOTAS = 30; // tope de seguridad: no tiene sentido animar más
+
+function lloverPelotas(goles) {
+  const capa = document.getElementById('ballRain');
+  if (!capa || !Number.isFinite(goles) || goles < 1) return;
+
+  // Con movimiento reducido no se anima nada
+  if (prefersReducedMotion) return;
+
+  // Si ya hay una lluvia en curso, se limpia para no acumular
+  capa.replaceChildren();
+
+  const cantidad = Math.min(goles, MAX_PELOTAS);
+  const azar = (min, max) => min + Math.random() * (max - min);
+
+  for (let i = 0; i < cantidad; i++) {
+    const pelota = document.createElement('div');
+    pelota.className = 'rain-ball';
+    // Repartidas a lo ancho, con algo de azar para que no queden en fila
+    const carril = (i + 0.5) / cantidad;
+    pelota.style.left = `calc(${(carril * 100).toFixed(1)}% - 20px)`;
+    pelota.style.setProperty('--size', `${azar(28, 46).toFixed(0)}px`);
+    pelota.style.setProperty('--dur', `${azar(2.2, 3.4).toFixed(2)}s`);
+    pelota.style.setProperty('--delay', `${azar(0, 0.9).toFixed(2)}s`);
+    pelota.style.setProperty('--drift', `${azar(-60, 60).toFixed(0)}px`);
+    pelota.style.setProperty('--spin', `${azar(-720, 720).toFixed(0)}deg`);
+    pelota.innerHTML = `<svg viewBox="-30 -30 60 60"><use href="#ateneoBall" /></svg>`;
+    pelota.addEventListener('animationend', () => pelota.remove());
+    capa.appendChild(pelota);
+  }
 }
 
 /* ============================================================
