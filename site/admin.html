@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Panel Organizadores · Torneo Ciclo Superior</title>
 <link rel="icon" href="assets/logo.png" />
-<link rel="stylesheet" href="css/style.css?v=21" />
+<link rel="stylesheet" href="css/style.css?v=22" />
 </head>
 <body>
 
@@ -33,7 +33,7 @@
       <div class="form-grid" style="text-align:left; margin-top:14px;">
         <div class="form-row">
           <label for="adminEmail">Usuario</label>
-          <input type="email" id="adminEmail" placeholder="ateneo@csjsf.edu.ar" autocomplete="username" />
+          <input type="email" id="adminEmail" value="" placeholder="ejemplo@csjsf.edu.ar" autocomplete="off" />
         </div>
         <div class="form-row">
           <label for="adminPassword">Contraseña</label>
@@ -52,8 +52,40 @@
 
     <div id="adminContent" style="display:none;">
 
+      <!-- Menú: cada apartado es un botón que abre su configuración -->
+      <div id="adminMenu" class="admin-menu">
+        <button class="admin-menu-item" data-open="aviso">
+          <span class="ami-icon">🌧️</span>
+          <span class="ami-text"><strong>Publicar aviso</strong><small>Suspensiones y avisos generales</small></span>
+          <span class="ami-arrow">›</span>
+        </button>
+        <button class="admin-menu-item" data-open="equipos">
+          <span class="ami-icon">🧾</span>
+          <span class="ami-text"><strong>Equipos inscriptos</strong><small>Editar equipos y sus jugadores</small></span>
+          <span class="ami-count" id="menuTeamsCount"></span>
+          <span class="ami-arrow">›</span>
+        </button>
+        <button class="admin-menu-item" data-open="fixture">
+          <span class="ami-icon">📅</span>
+          <span class="ami-text"><strong>Fixture</strong><small>Programar un partido nuevo</small></span>
+          <span class="ami-arrow">›</span>
+        </button>
+        <button class="admin-menu-item" data-open="partidos">
+          <span class="ami-icon">⚽</span>
+          <span class="ami-text"><strong>Resultados y goles</strong><small>Cargar lo que se jugó</small></span>
+          <span class="ami-arrow">›</span>
+        </button>
+        <button class="admin-menu-item" data-open="portada">
+          <span class="ami-icon">📸</span>
+          <span class="ami-text"><strong>Portada</strong><small>Fotos del carrusel</small></span>
+          <span class="ami-count" id="menuPhotosCount"></span>
+          <span class="ami-arrow">›</span>
+        </button>
+      </div>
+
       <!-- Aviso de suspensión rápido -->
-      <section class="panel">
+      <section class="panel admin-panel" data-panel="aviso" hidden>
+        <button class="drill-back admin-back">‹ Volver</button>
         <div class="section-title"><h2>🌧️ Publicar aviso</h2></div>
         <div class="form-grid">
           <div class="form-row">
@@ -75,14 +107,16 @@
       </section>
 
       <!-- Equipos inscriptos -->
-      <section class="panel">
+      <section class="panel admin-panel" data-panel="equipos" hidden>
+        <button class="drill-back admin-back">‹ Volver</button>
         <div class="section-title"><h2>🧾 Equipos inscriptos</h2><span class="badge" id="teamsCountBadge">-</span></div>
         <p style="color:var(--text-dim); font-size:13.5px; margin-top:-8px;">Deslizá cada equipo hacia la izquierda para editarlo o eliminarlo.</p>
         <div id="adminTeamsList"></div>
       </section>
 
       <!-- Crear / editar partidos -->
-      <section class="panel">
+      <section class="panel admin-panel" data-panel="fixture" hidden>
+        <button class="drill-back admin-back">‹ Volver</button>
         <div class="section-title"><h2>📅 Fixture - nuevo partido</h2></div>
         <div class="form-grid">
           <div class="two-col">
@@ -125,13 +159,15 @@
       </section>
 
       <!-- Gestión de partidos: resultado, goles, estado -->
-      <section class="panel">
+      <section class="panel admin-panel" data-panel="partidos" hidden>
+        <button class="drill-back admin-back">‹ Volver</button>
         <div class="section-title"><h2>⚽ Partidos - cargar resultados y goles</h2></div>
         <div id="adminMatchesList"></div>
       </section>
 
       <!-- Portada / carrusel de fotos -->
-      <section class="panel">
+      <section class="panel admin-panel" data-panel="portada" hidden>
+        <button class="drill-back admin-back">‹ Volver</button>
         <div class="section-title"><h2>📸 Portada - carrusel de fotos</h2><span class="badge" id="photosCountBadge">-</span></div>
         <p style="color:var(--text-dim); font-size:13.5px; margin-top:-8px;">Las fotos que subas acá aparecen en el carrusel de la portada, en el orden de esta lista.</p>
         <div class="form-grid">
@@ -161,6 +197,6 @@
 
 </main>
 
-<script type="module" src="js/admin.js?v=21"></script>
+<script type="module" src="js/admin.js?v=22"></script>
 </body>
 </html>

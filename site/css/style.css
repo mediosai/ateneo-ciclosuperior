@@ -987,6 +987,42 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
 .swipe-edit-actions { display: flex; gap: 8px; }
 .swipe-edit-actions .btn { flex: 1; }
 
+/* ---------------- Menú del panel: cada apartado es un botón ---------------- */
+.admin-menu { display: grid; gap: 12px; }
+.admin-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 18px;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: border-color .2s var(--ease), transform .2s var(--ease), background .2s var(--ease);
+}
+.admin-menu-item:hover { border-color: var(--gold); background: var(--surface-2); }
+.admin-menu-item:active { transform: scale(.99); transition: transform .1s ease-out; }
+.ami-icon { font-size: 26px; flex-shrink: 0; }
+.ami-text { flex: 1; min-width: 0; }
+.ami-text strong { display: block; font-size: 16px; }
+.ami-text small { display: block; font-size: 12.5px; color: var(--text-dim); margin-top: 3px; }
+.ami-count {
+  flex-shrink: 0;
+  font-size: 12px; font-weight: 700;
+  background: var(--surface-2); color: var(--text-dim);
+  padding: 4px 10px; border-radius: 999px;
+}
+.ami-arrow { flex-shrink: 0; font-size: 22px; color: var(--text-dim); line-height: 1; }
+.admin-back { margin-bottom: 6px; }
+.admin-panel[hidden] { display: none; }
+
+/* Botones de cada fila de jugador dentro del editor de equipo */
+.player-row-actions { display: flex; gap: 6px; align-items: end; }
+.player-row-actions .remove-player { width: 42px; flex-shrink: 0; }
+
 /* ---------------- Navegación por niveles (fechas > partidos > detalle) ---------------- */
 .drill-row {
   display: flex;

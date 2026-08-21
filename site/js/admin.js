@@ -51,6 +51,29 @@ document.getElementById('adminLogout').addEventListener('click', async () => {
   location.reload();
 });
 
+/* ---------------- Navegación entre apartados del panel ---------------- */
+function abrirApartado(nombre) {
+  document.getElementById('adminMenu').hidden = true;
+  document.querySelectorAll('.admin-panel').forEach(p => { p.hidden = p.dataset.panel !== nombre; });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function volverAlMenu() {
+  document.querySelectorAll('.admin-panel').forEach(p => { p.hidden = true; });
+  document.getElementById('adminMenu').hidden = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('[data-open]').forEach(btn =>
+  btn.addEventListener('click', () => abrirApartado(btn.dataset.open)));
+document.querySelectorAll('.admin-back').forEach(btn =>
+  btn.addEventListener('click', volverAlMenu));
+
+/* Del curso "5°3" nos quedamos con el año ("5°"): en el fixture no
+   queremos mostrar la división al lado del equipo. */
+function soloAnio(curso) {
+  const m = String(curso || '').match(/^\s*(\d+\s*°)/);
+  return m ? m[1].replace(/\s+/g, '') : String(curso || '');
+}
+
 /* ---------------- Estado / gate de admin ---------------- */
 async function checkAdminAndBoot(session) {
   const loginPanel = document.getElementById('loginPanel');
@@ -125,6 +148,7 @@ publishAnnBtn.addEventListener('click', withBusy(publishAnnBtn, async () => {
 async function loadAdminTeams() {
   await loadTeamsIntoState();
   document.getElementById('teamsCountBadge').textContent = `${TEAMS.length} equipo${TEAMS.length === 1 ? '' : 's'}`;
+  document.getElementById('menuTeamsCount').textContent = TEAMS.length;
   const el = document.getElementById('adminTeamsList');
 
   if (!TEAMS.length) {
@@ -201,38 +225,148 @@ function attachSwipeHandlers() {
       loadAdminTeams();
     }));
 
-    item.querySelector('[data-action="edit"]').addEventListener('click', () => {
-      const team = TEAMS.find(t => t.id === teamId);
-      if (!team) return;
-      setX(0, true);
-      content.innerHTML = `
-        <div class="swipe-edit-form">
-          <div class="two-col">
-            <div class="form-row"><label>Nombre</label><input class="edit-name" maxlength="60" value="${esc(team.name)}" /></div>
-            <div class="form-row"><label>Curso</label><input class="edit-course" maxlength="30" value="${esc(team.course)}" /></div>
-          </div>
-          <div class="form-row"><label>Mail de contacto</label><input class="edit-email" maxlength="100" value="${esc(team.captain_email)}" /></div>
-          <div class="swipe-edit-actions">
-            <button class="btn btn-primary btn-sm edit-save">Guardar</button>
-            <button class="btn btn-outline btn-sm edit-cancel">Cancelar</button>
-          </div>
-        </div>`;
-      content.querySelector('.edit-cancel').addEventListener('click', () => loadAdminTeams());
-      content.querySelector('.edit-save').addEventListener('click', async () => {
-        const name = content.querySelector('.edit-name').value.trim();
-        const course = content.querySelector('.edit-course').value.trim();
-        const captain_email = content.querySelector('.edit-email').value.trim();
-        if (!name || !course || !captain_email) return;
-        const { error } = await supabase.from('teams').update({ name, course, captain_email }).eq('id', teamId);
-        if (error) { alert('Error al guardar: ' + error.message); return; }
-        loadAdminTeams();
-      });
-    });
+    item.querySelector('[data-action="edit"]')
+      .addEventListener('click', () => renderTeamEditor(teamId));
   });
 }
 
+/* ---------------- Editor de un equipo: datos + jugadores ---------------- */
+async function renderTeamEditor(teamId) {
+  const el = document.getElementById('adminTeamsList');
+  const team = TEAMS.find(t => t.id === teamId);
+  if (!team) return loadAdminTeams();
+
+  el.innerHTML = `<div class="skeleton" style="height:160px"></div>`;
+  const { data: players } = await supabase.from('players')
+    .select('*').eq('team_id', teamId).order('last_name');
+
+  el.innerHTML = `
+    <button class="drill-back" id="backToTeams">‹ Todos los equipos</button>
+
+    <div class="panel" style="box-shadow:none; margin-top:12px;">
+      <h4 style="margin-top:0;">Datos del equipo</h4>
+      <div class="form-grid">
+        <div class="two-col">
+          <div class="form-row"><label>Nombre</label><input class="edit-name" maxlength="60" value="${esc(team.name)}" /></div>
+          <div class="form-row"><label>Curso</label><input class="edit-course" maxlength="30" value="${esc(team.course)}" /></div>
+        </div>
+        <div class="form-row"><label>Mail de contacto</label><input class="edit-email" maxlength="100" value="${esc(team.captain_email)}" /></div>
+        <button class="btn btn-primary btn-sm edit-save">Guardar datos del equipo</button>
+      </div>
+      <div class="alert team-alert"></div>
+    </div>
+
+    <div class="panel" style="box-shadow:none; margin-top:14px;">
+      <h4 style="margin-top:0;">Jugadores <span class="badge">${(players || []).length}</span></h4>
+      <p style="color:var(--text-dim); font-size:13px; margin-top:-4px;">Editá un nombre y tocá Guardar en esa fila. Los cambios se aplican jugador por jugador.</p>
+      <div id="playersEditor"></div>
+
+      <h4 style="margin:18px 0 8px;">Agregar jugador/a</h4>
+      <div class="player-row">
+        <div class="form-row"><label>Nombre</label><input class="np-first" maxlength="50" placeholder="Nombre" /></div>
+        <div class="form-row"><label>Apellido</label><input class="np-last" maxlength="50" placeholder="Apellido" /></div>
+        <div class="form-row"><label>Curso</label><input class="np-course" maxlength="30" value="${esc(team.course)}" /></div>
+        <button class="btn btn-primary btn-sm np-add">+ Agregar</button>
+      </div>
+      <div class="alert players-alert"></div>
+    </div>`;
+
+  document.getElementById('backToTeams').addEventListener('click', loadAdminTeams);
+
+  const teamAlert = el.querySelector('.team-alert');
+  const playersAlert = el.querySelector('.players-alert');
+
+  const saveBtn = el.querySelector('.edit-save');
+  saveBtn.addEventListener('click', withBusy(saveBtn, async () => {
+    const name = el.querySelector('.edit-name').value.trim();
+    const course = el.querySelector('.edit-course').value.trim();
+    const captain_email = el.querySelector('.edit-email').value.trim();
+    if (!name || !course || !captain_email) {
+      showAlert(teamAlert, 'error', 'Completá nombre, curso y mail del equipo.'); return;
+    }
+    const { error } = await supabase.from('teams').update({ name, course, captain_email }).eq('id', teamId);
+    if (error) { showAlert(teamAlert, 'error', 'Error al guardar: ' + error.message); return; }
+    showAlert(teamAlert, 'success', 'Datos del equipo guardados.');
+    await loadTeamsIntoState();
+    fillTeamSelects();
+  }));
+
+  pintarJugadores(players || []);
+
+  function pintarJugadores(lista) {
+    const cont = document.getElementById('playersEditor');
+    if (!lista.length) {
+      cont.innerHTML = `<div class="empty-state" style="padding:12px;">Este equipo todavía no tiene jugadores.</div>`;
+      return;
+    }
+    cont.innerHTML = lista.map(p => `
+      <div class="player-row" data-player="${esc(p.id)}">
+        <div class="form-row"><label>Nombre</label><input class="p-first" maxlength="50" value="${esc(p.first_name)}" /></div>
+        <div class="form-row"><label>Apellido</label><input class="p-last" maxlength="50" value="${esc(p.last_name)}" /></div>
+        <div class="form-row"><label>Curso</label><input class="p-course" maxlength="30" value="${esc(p.course)}" /></div>
+        <div class="player-row-actions">
+          <button class="btn btn-primary btn-sm p-save">Guardar</button>
+          <button class="remove-player p-del" title="Quitar jugador">✕</button>
+        </div>
+      </div>`).join('');
+
+    cont.querySelectorAll('[data-player]').forEach(fila => {
+      const id = fila.dataset.player;
+
+      const bSave = fila.querySelector('.p-save');
+      bSave.addEventListener('click', withBusy(bSave, async () => {
+        const first_name = fila.querySelector('.p-first').value.trim();
+        const last_name = fila.querySelector('.p-last').value.trim();
+        const course = fila.querySelector('.p-course').value.trim();
+        if (!first_name || !last_name || !course) {
+          showAlert(playersAlert, 'error', 'Completá nombre, apellido y curso.'); return;
+        }
+        const { error } = await supabase.from('players')
+          .update({ first_name, last_name, course }).eq('id', id);
+        if (error) { showAlert(playersAlert, 'error', 'Error al guardar: ' + error.message); return; }
+        showAlert(playersAlert, 'success', `Se guardaron los datos de ${last_name}, ${first_name}.`);
+      }));
+
+      const bDel = fila.querySelector('.p-del');
+      bDel.addEventListener('click', withBusy(bDel, async () => {
+        const quien = `${fila.querySelector('.p-last').value}, ${fila.querySelector('.p-first').value}`;
+        if (!confirm(`¿Quitar a ${quien} del equipo?`)) return;
+        const { error } = await supabase.from('players').delete().eq('id', id);
+        if (error) { showAlert(playersAlert, 'error', 'No se pudo quitar: ' + error.message); return; }
+        await recargarJugadores();
+        showAlert(playersAlert, 'success', 'Jugador quitado.');
+      }));
+    });
+  }
+
+  const addBtn = el.querySelector('.np-add');
+  addBtn.addEventListener('click', withBusy(addBtn, async () => {
+    const first_name = el.querySelector('.np-first').value.trim();
+    const last_name = el.querySelector('.np-last').value.trim();
+    const course = el.querySelector('.np-course').value.trim();
+    if (!first_name || !last_name || !course) {
+      showAlert(playersAlert, 'error', 'Completá nombre, apellido y curso.'); return;
+    }
+    const { error } = await supabase.from('players').insert({ team_id: teamId, first_name, last_name, course });
+    if (error) { showAlert(playersAlert, 'error', 'Error al agregar: ' + error.message); return; }
+    el.querySelector('.np-first').value = '';
+    el.querySelector('.np-last').value = '';
+    await recargarJugadores();
+    showAlert(playersAlert, 'success', `${last_name}, ${first_name} agregado al equipo.`);
+  }));
+
+  async function recargarJugadores() {
+    const { data } = await supabase.from('players')
+      .select('*').eq('team_id', teamId).order('last_name');
+    pintarJugadores(data || []);
+    const badge = el.querySelector('h4 .badge');
+    if (badge) badge.textContent = (data || []).length;
+  }
+}
+
 function fillTeamSelects() {
-  const opts = TEAMS.map(t => `<option value="${esc(t.id)}">${esc(t.name)} (${esc(t.course)})</option>`).join('');
+  // Solo el año, sin la división
+  const opts = TEAMS.map(t => `<option value="${esc(t.id)}">${esc(t.name)} (${esc(soloAnio(t.course))})</option>`).join('');
   document.getElementById('matchHome').innerHTML = opts;
   document.getElementById('matchAway').innerHTML = opts;
 }
@@ -612,6 +746,7 @@ async function loadAdminPhotos() {
   const { data: photos } = await supabase.from('cover_photos').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: true });
   const el = document.getElementById('adminPhotosList');
   document.getElementById('photosCountBadge').textContent = `${photos?.length || 0} foto${(photos?.length || 0) === 1 ? '' : 's'}`;
+  document.getElementById('menuPhotosCount').textContent = photos?.length || 0;
 
   if (!photos || !photos.length) {
     el.innerHTML = `<div class="empty-state"><div class="icon-big">📸</div>Todavía no subiste fotos.</div>`;
