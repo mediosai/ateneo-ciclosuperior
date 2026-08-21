@@ -360,8 +360,11 @@ button { font-family: inherit; cursor: pointer; }
 }
 
 /* ---------------- Avisos en la portada ---------------- */
+/* Va apenas debajo del header, antes de la portada: es lo primero que
+   se ve y ningún panel puede taparlo. */
 .portada-avisos {
   background: var(--navy);
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
 .portada-avisos[hidden] { display: none; }
 .portada-avisos-inner {
