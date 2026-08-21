@@ -435,12 +435,26 @@ button { font-family: inherit; cursor: pointer; }
 .al-dot-2 { animation-delay: .15s; }
 .al-dot-3 { animation-delay: .25s; }
 .al-wing { animation-name: alDrop; }
-.al-wing-left  { animation-delay: .35s; }
+.al-wing-left {
+  animation: alDrop .6s cubic-bezier(.22, 1, .36, 1) .35s backwards,
+             alSave .5s cubic-bezier(.34, 1.56, .64, 1) 1.55s;
+  transform-origin: 140px 100px;
+  transform-box: view-box;
+}
 .al-wing-right { animation-delay: .42s; }
 .al-a { animation-name: alRise; animation-delay: .5s; animation-duration: .7s; }
 .al-ball {
-  animation-name: alBallIn;
-  animation-delay: .85s;
+  /* Destino final de la pelota: el centro de la O de ATENEO.
+     Los valores reales los calcula el JS midiendo la tipografía;
+     estos son un respaldo por si esa medición no llega a correr. */
+  --al-dx: 103px;
+  --al-dy: 74px;
+  --al-s: .8;
+  animation-name: alBallPlay;
+  animation-duration: 3.2s;
+  animation-delay: .9s;
+  animation-fill-mode: both;
+  animation-timing-function: linear;
   transform-origin: 200px 196px;
   transform-box: view-box;
 }
@@ -459,9 +473,43 @@ button { font-family: inherit; cursor: pointer; }
   from { opacity: 0; transform: translateY(26px) scaleY(.82); }
   to   { opacity: 1; transform: translateY(0) scaleY(1); }
 }
-@keyframes alBallIn {
-  from { opacity: 0; transform: scale(.3) rotate(-140deg); }
-  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+/* Recorrido de la pelota: aparece chica y crece, va hacia la mano
+   izquierda del arquero, la ataja, y de ahí cae picando hasta quedar
+   apoyada en la línea de base del texto, convertida en la O. */
+@keyframes alBallPlay {
+  0%   { opacity: 0; transform: translate(0px, 0px) scale(.12) rotate(0deg); }
+  4%   { opacity: 1; transform: translate(0px, 0px) scale(.35) rotate(0deg); }
+  11%  { transform: translate(0px, 0px) scale(1) rotate(0deg);
+         animation-timing-function: cubic-bezier(.4, 0, .7, .5); }
+  16%  { transform: translate(-18px, -12px) scale(1) rotate(-34deg); }
+  21%  { transform: translate(-60px, -34px) scale(1) rotate(-78deg);
+         animation-timing-function: cubic-bezier(.2, .7, .4, 1); }   /* atajada */
+  26%  { transform: translate(-46px, -56px) scale(.98) rotate(-26deg); }
+  33%  { transform: translate(calc(var(--al-dx) * .04), -30px) scale(.93) rotate(50deg);
+         animation-timing-function: cubic-bezier(.6, .04, .98, .34); } /* cae */
+  44%  { transform: translate(calc(var(--al-dx) * .28), var(--al-dy)) scale(var(--al-s)) rotate(168deg); }
+  46%  { transform: translate(calc(var(--al-dx) * .32), calc(var(--al-dy) + 3px)) scale(calc(var(--al-s) * .93)) rotate(182deg);
+         animation-timing-function: cubic-bezier(.2, .7, .4, 1); }     /* pique 1 */
+  55%  { transform: translate(calc(var(--al-dx) * .52), calc(var(--al-dy) - 48px)) scale(var(--al-s)) rotate(252deg);
+         animation-timing-function: cubic-bezier(.6, .04, .98, .34); }
+  65%  { transform: translate(calc(var(--al-dx) * .72), var(--al-dy)) scale(var(--al-s)) rotate(332deg); }
+  67%  { transform: translate(calc(var(--al-dx) * .75), calc(var(--al-dy) + 2px)) scale(calc(var(--al-s) * .95)) rotate(342deg);
+         animation-timing-function: cubic-bezier(.2, .7, .4, 1); }     /* pique 2 */
+  74%  { transform: translate(calc(var(--al-dx) * .88), calc(var(--al-dy) - 25px)) scale(var(--al-s)) rotate(392deg);
+         animation-timing-function: cubic-bezier(.6, .04, .98, .34); }
+  83%  { transform: translate(var(--al-dx), var(--al-dy)) scale(var(--al-s)) rotate(440deg);
+         animation-timing-function: cubic-bezier(.2, .7, .4, 1); }     /* pique 3, ya en la O */
+  89%  { transform: translate(var(--al-dx), calc(var(--al-dy) - 9px)) scale(var(--al-s)) rotate(454deg);
+         animation-timing-function: cubic-bezier(.6, .04, .98, .34); }
+  95%  { transform: translate(var(--al-dx), var(--al-dy)) scale(var(--al-s)) rotate(462deg); }
+  100% { opacity: 1; transform: translate(var(--al-dx), var(--al-dy)) scale(var(--al-s)) rotate(462deg); }
+}
+
+/* La mano izquierda reacciona justo en el momento de la atajada */
+@keyframes alSave {
+  0%   { transform: rotate(0deg) scale(1); }
+  30%  { transform: rotate(-10deg) scale(1.12); }
+  100% { transform: rotate(0deg) scale(1); }
 }
 @keyframes alFadeUp {
   from { opacity: 0; transform: translateY(12px); }
@@ -472,19 +520,6 @@ button { font-family: inherit; cursor: pointer; }
   to   { opacity: 1; letter-spacing: 6px; }
 }
 
-/* La pelota queda colgando del vértice de la A y se hamaca de lado a lado.
-   El pivote va arriba de la pelota, para que el movimiento sea de péndulo. */
-.al-ball-swing {
-  transform-origin: 200px 146px;
-  transform-box: view-box;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .al-ball-swing { animation: alBallSwing 3.4s ease-in-out 1.45s infinite; }
-}
-@keyframes alBallSwing {
-  0%, 100% { transform: rotate(-11deg); }
-  50%      { transform: rotate(11deg); }
-}
 
 @media (max-width: 480px) {
   .ateneo-logo .al-sub { font-size: 13px; letter-spacing: 5px; }
@@ -1111,11 +1146,17 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
   .brand:hover .brand-logo { transform: none; }
   .btn:active, .team-chip:active, .main-nav button:active, .main-nav a:active { transform: none; }
   .match-card:hover, .announce-item:hover { transform: none; }
-  /* El logo se muestra armado, sin entrada ni hamacado */
-  .al-dot, .al-wing, .al-a, .al-ball, .al-ball-swing, .al-word, .al-sub {
+  /* El logo se muestra ya armado: sin entrada, sin atajada y con la
+     pelota directamente en su lugar final, como la O de ATENEO. */
+  .al-dot, .al-wing, .al-a, .al-word, .al-sub {
     animation: none !important;
     opacity: 1;
     transform: none;
+  }
+  .al-ball {
+    animation: none !important;
+    opacity: 1;
+    transform: translate(var(--al-dx), var(--al-dy)) scale(var(--al-s));
   }
 }
 

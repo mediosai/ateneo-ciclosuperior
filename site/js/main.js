@@ -35,6 +35,64 @@ const hashSection = location.hash.replace('#', '');
 if (hashSection && document.getElementById(`sec-${hashSection}`)) showSection(hashSection);
 
 /* ============================================================
+   Logo animado: ubica la pelota en el lugar exacto de la O
+   ============================================================ */
+function ajustarLogo() {
+  const svg = document.querySelector('.ateneo-logo');
+  const word = document.getElementById('alWord');
+  const ball = svg && svg.querySelector('.al-ball');
+  if (!svg || !word || !ball) return;
+
+  // Ancho de una "O" con la misma tipografía, medido sobre el propio SVG
+  const probe = word.cloneNode(false);
+  probe.removeAttribute('id');
+  probe.setAttribute('visibility', 'hidden');
+  probe.textContent = 'O';
+  svg.appendChild(probe);
+  const oWidth = probe.getComputedTextLength();
+  svg.removeChild(probe);
+  if (!oWidth) return;
+
+  // El alto hay que medirlo aparte: getBBox() de un <text> devuelve la caja
+  // de línea (con ascendentes y descendentes), no el alto real de la letra.
+  const cs = getComputedStyle(word);
+  const fontSize = parseFloat(cs.fontSize) || 62;
+  let inkAscent = fontSize * 0.71;   // respaldo aproximado si no hay canvas
+  let inkDescent = fontSize * 0.01;
+  try {
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const m = ctx.measureText('O');
+    if (m.actualBoundingBoxAscent) {
+      inkAscent = m.actualBoundingBoxAscent;
+      inkDescent = m.actualBoundingBoxDescent || 0;
+    }
+  } catch (_) { /* nos quedamos con la aproximación */ }
+  const oHeight = inkAscent + inkDescent;
+
+  // "ATENE" + la pelota-O tienen que quedar centrados como una sola palabra
+  const wordWidth = word.getComputedTextLength();
+  const left = 200 - (wordWidth + oWidth) / 2;
+  word.setAttribute('text-anchor', 'start');
+  word.setAttribute('x', left);
+
+  const baseline = Number(word.getAttribute('y')) || 292;
+  const oCenterX = left + wordWidth + oWidth / 2;
+  const oCenterY = baseline - (inkAscent - inkDescent) / 2;
+
+  ball.style.setProperty('--al-dx', (oCenterX - 200) + 'px');
+  ball.style.setProperty('--al-dy', (oCenterY - 196) + 'px');
+  ball.style.setProperty('--al-s', oHeight / 54); // 54 = diámetro de la pelota
+}
+
+// Se mide con la tipografía ya cargada; si tarda, igual hay valores de respaldo
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(ajustarLogo);
+} else {
+  window.addEventListener('load', ajustarLogo);
+}
+
+/* ============================================================
    Utilidades
    ============================================================ */
 const fmtDate = (iso) => {
