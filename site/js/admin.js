@@ -1,5 +1,24 @@
 import { supabase } from './supabaseClient.js';
 
+/* Escape de HTML para datos de la base insertados con innerHTML.
+   Los nombres de equipos/jugadores los carga cualquiera desde la
+   inscripción pública: sin escape serían XSS directo sobre la
+   sesión del administrador. */
+const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ESC_MAP[c]);
+
+/* Evita el doble envío: deshabilita el botón mientras corre el
+   handler async. Un doble click en "+ Agregar gol" podía pasar la
+   validación dos veces y cargar más goleadores que goles. */
+function withBusy(btn, handler) {
+  return async (...args) => {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try { await handler(...args); }
+    finally { btn.disabled = false; }
+  };
+}
+
 function showAlert(el, type, msg) {
   // No pisar className: el elemento puede tener clases propias (.g-alert, .m-alert)
   el.classList.remove('alert-error', 'alert-success', 'alert-info');
@@ -73,22 +92,24 @@ async function loadAdminAnnouncements() {
   const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
   const el = document.getElementById('adminAnnList');
   el.innerHTML = (data || []).map(a => `
-    <div class="announce-item ${a.kind}">
+    <div class="announce-item ${a.kind === 'suspension' ? 'suspension' : 'info'}">
       <span class="icon">${a.kind === 'suspension' ? '🌧️' : 'ℹ️'}</span>
       <div style="flex:1">
-        <strong>${a.title}</strong>${a.message || ''}
-        <div class="when">${new Date(a.created_at).toLocaleString('es-AR')}${a.matchday ? ' · Fecha ' + a.matchday : ''}</div>
+        <strong>${esc(a.title)}</strong>${esc(a.message || '')}
+        <div class="when">${new Date(a.created_at).toLocaleString('es-AR')}${a.matchday ? ' · Fecha ' + esc(a.matchday) : ''}</div>
       </div>
-      <button class="btn btn-outline btn-sm" data-del-ann="${a.id}">Borrar</button>
+      <button class="btn btn-outline btn-sm" data-del-ann="${esc(a.id)}">Borrar</button>
     </div>`).join('') || `<div class="empty-state">Sin avisos todavía.</div>`;
 
-  el.querySelectorAll('[data-del-ann]').forEach(b => b.addEventListener('click', async () => {
-    await supabase.from('announcements').delete().eq('id', b.dataset.delAnn);
+  el.querySelectorAll('[data-del-ann]').forEach(b => b.addEventListener('click', withBusy(b, async () => {
+    const { error } = await supabase.from('announcements').delete().eq('id', b.dataset.delAnn);
+    if (error) { alert('No se pudo borrar el aviso: ' + error.message); return; }
     loadAdminAnnouncements();
-  }));
+  })));
 }
 
-document.getElementById('publishAnnBtn').addEventListener('click', async () => {
+const publishAnnBtn = document.getElementById('publishAnnBtn');
+publishAnnBtn.addEventListener('click', withBusy(publishAnnBtn, async () => {
   const kind = document.getElementById('annKind').value;
   const title = document.getElementById('annTitle').value.trim();
   const alertEl = document.getElementById('annAlert');
@@ -98,7 +119,7 @@ document.getElementById('publishAnnBtn').addEventListener('click', async () => {
   showAlert(alertEl, 'success', 'Aviso publicado.');
   document.getElementById('annTitle').value = '';
   loadAdminAnnouncements();
-});
+}));
 
 /* ---------------- Equipos: lista deslizable (editar / eliminar) ---------------- */
 async function loadAdminTeams() {
@@ -113,15 +134,15 @@ async function loadAdminTeams() {
   }
 
   el.innerHTML = TEAMS.map(t => `
-    <div class="swipe-item" data-id="${t.id}">
+    <div class="swipe-item" data-id="${esc(t.id)}">
       <div class="swipe-actions">
         <button class="swipe-action edit" data-action="edit">Editar</button>
         <button class="swipe-action delete" data-action="delete">Eliminar</button>
       </div>
       <div class="swipe-content">
         <div class="swipe-main">
-          <strong>${t.name}</strong> <span class="badge">${t.course}</span>
-          <div class="swipe-sub">${t.captain_email} · inscripto el ${new Date(t.created_at).toLocaleDateString('es-AR')}</div>
+          <strong>${esc(t.name)}</strong> <span class="badge">${esc(t.course)}</span>
+          <div class="swipe-sub">${esc(t.captain_email)} · inscripto el ${new Date(t.created_at).toLocaleDateString('es-AR')}</div>
         </div>
       </div>
     </div>`).join('');
@@ -142,7 +163,7 @@ function attachSwipeHandlers() {
   document.querySelectorAll('.swipe-item').forEach(item => {
     const content = item.querySelector('.swipe-content');
     const teamId = item.dataset.id;
-    let startX = 0, openX = 0, dragging = false, moved = false;
+    let startX = 0, openX = 0, dragging = false;
 
     function setX(x, animate) {
       x = Math.max(-ACTIONS_WIDTH, Math.min(0, x));
@@ -153,16 +174,14 @@ function attachSwipeHandlers() {
 
     content.addEventListener('pointerdown', (e) => {
       if (e.target.closest('.swipe-edit-form')) return; // no arrastrar mientras se edita
-      dragging = true; moved = false;
+      dragging = true;
       startX = e.clientX;
       try { content.setPointerCapture(e.pointerId); } catch (_) {}
       closeAllSwipes(content);
     });
     content.addEventListener('pointermove', (e) => {
       if (!dragging) return;
-      const dx = e.clientX - startX;
-      if (Math.abs(dx) > 4) moved = true;
-      setX(openX + dx, false);
+      setX(openX + (e.clientX - startX), false);
       startX = e.clientX;
     });
     function endDrag() {
@@ -173,12 +192,14 @@ function attachSwipeHandlers() {
     content.addEventListener('pointerup', endDrag);
     content.addEventListener('pointercancel', endDrag);
 
-    item.querySelector('[data-action="delete"]').addEventListener('click', async () => {
+    const delBtn = item.querySelector('[data-action="delete"]');
+    delBtn.addEventListener('click', withBusy(delBtn, async () => {
       const team = TEAMS.find(t => t.id === teamId);
       if (!confirm(`¿Eliminar el equipo "${team?.name || ''}" y sus jugadores? Esta acción no se puede deshacer.`)) return;
-      await supabase.from('teams').delete().eq('id', teamId);
+      const { error } = await supabase.from('teams').delete().eq('id', teamId);
+      if (error) { alert('No se pudo eliminar el equipo: ' + error.message); return; }
       loadAdminTeams();
-    });
+    }));
 
     item.querySelector('[data-action="edit"]').addEventListener('click', () => {
       const team = TEAMS.find(t => t.id === teamId);
@@ -187,10 +208,10 @@ function attachSwipeHandlers() {
       content.innerHTML = `
         <div class="swipe-edit-form">
           <div class="two-col">
-            <div class="form-row"><label>Nombre</label><input class="edit-name" value="${team.name}" /></div>
-            <div class="form-row"><label>Curso</label><input class="edit-course" value="${team.course}" /></div>
+            <div class="form-row"><label>Nombre</label><input class="edit-name" maxlength="60" value="${esc(team.name)}" /></div>
+            <div class="form-row"><label>Curso</label><input class="edit-course" maxlength="30" value="${esc(team.course)}" /></div>
           </div>
-          <div class="form-row"><label>Mail de contacto</label><input class="edit-email" value="${team.captain_email}" /></div>
+          <div class="form-row"><label>Mail de contacto</label><input class="edit-email" maxlength="100" value="${esc(team.captain_email)}" /></div>
           <div class="swipe-edit-actions">
             <button class="btn btn-primary btn-sm edit-save">Guardar</button>
             <button class="btn btn-outline btn-sm edit-cancel">Cancelar</button>
@@ -211,16 +232,17 @@ function attachSwipeHandlers() {
 }
 
 function fillTeamSelects() {
-  const opts = TEAMS.map(t => `<option value="${t.id}">${t.name} (${t.course})</option>`).join('');
+  const opts = TEAMS.map(t => `<option value="${esc(t.id)}">${esc(t.name)} (${esc(t.course)})</option>`).join('');
   document.getElementById('matchHome').innerHTML = opts;
   document.getElementById('matchAway').innerHTML = opts;
 }
 
 /* ---------------- Crear partido ---------------- */
-document.getElementById('createMatchBtn').addEventListener('click', async () => {
+const createMatchBtn = document.getElementById('createMatchBtn');
+createMatchBtn.addEventListener('click', withBusy(createMatchBtn, async () => {
   const home_team_id = document.getElementById('matchHome').value;
   const away_team_id = document.getElementById('matchAway').value;
-  const matchday = parseInt(document.getElementById('matchDay').value || '1');
+  const matchday = parseInt(document.getElementById('matchDay').value, 10);
   const dateVal = document.getElementById('matchDate').value;
   const timeVal = document.getElementById('matchTime').value;
   const venue = document.getElementById('matchVenue').value;
@@ -228,6 +250,9 @@ document.getElementById('createMatchBtn').addEventListener('click', async () => 
 
   if (!home_team_id || !away_team_id || home_team_id === away_team_id) {
     showAlert(alertEl, 'error', 'Elegí dos equipos distintos.'); return;
+  }
+  if (!Number.isInteger(matchday) || matchday < 1) {
+    showAlert(alertEl, 'error', 'La fecha (jornada) tiene que ser un número desde 1.'); return;
   }
   const { error } = await supabase.from('matches').insert({
     home_team_id, away_team_id, matchday,
@@ -238,7 +263,7 @@ document.getElementById('createMatchBtn').addEventListener('click', async () => 
   showAlert(alertEl, 'success', 'Partido programado.');
   document.getElementById('matchDate').value = '';
   loadAdminMatches();
-});
+}));
 
 /* ---------------- Gestión de partidos: fechas > partidos > detalle ---------------- */
 // Nivel actual del panel: 'matchdays' (lista de fechas), 'matches'
@@ -318,10 +343,10 @@ function renderMatchList(el) {
     <button class="drill-back" id="backToMatchdays">‹ Todas las fechas</button>
     <h4 style="margin:14px 0 10px;">Fecha ${matchesView.matchday}</h4>
     ${ms.map(m => `
-      <button class="drill-row" data-match="${m.id}">
+      <button class="drill-row" data-match="${esc(m.id)}">
         <div class="drill-main">
-          <strong>${teamLabel(m.home_team_id)} vs ${teamLabel(m.away_team_id)}</strong>
-          <div class="drill-sub">${fmtMatchDate(m.scheduled_at)}${m.venue ? ' · ' + m.venue : ''}</div>
+          <strong>${esc(teamLabel(m.home_team_id))} vs ${esc(teamLabel(m.away_team_id))}</strong>
+          <div class="drill-sub">${fmtMatchDate(m.scheduled_at)}${m.venue ? ' · ' + esc(m.venue) : ''}</div>
         </div>
         ${m.status === 'played' && m.home_score != null
           ? `<span class="drill-score">${m.home_score} - ${m.away_score}</span>`
@@ -350,11 +375,11 @@ async function renderMatchDetail(el) {
     <button class="drill-back" id="backToMatches">‹ Fecha ${m.matchday}</button>
 
     <div class="match-card" style="margin-top:14px;">
-      <div class="match-meta"><span>Fecha ${m.matchday}</span><span>${fmtMatchDate(m.scheduled_at)}${m.venue ? ' · ' + m.venue : ''}</span></div>
+      <div class="match-meta"><span>Fecha ${m.matchday}</span><span>${fmtMatchDate(m.scheduled_at)}${m.venue ? ' · ' + esc(m.venue) : ''}</span></div>
       <div class="match-teams" style="margin-bottom:16px;">
-        <div class="match-team home">${teamLabel(m.home_team_id)}</div>
+        <div class="match-team home">${esc(teamLabel(m.home_team_id))}</div>
         <div class="match-score">${m.home_score != null ? `${m.home_score} - ${m.away_score}` : 'vs'}</div>
-        <div class="match-team away">${teamLabel(m.away_team_id)}</div>
+        <div class="match-team away">${esc(teamLabel(m.away_team_id))}</div>
       </div>
 
       <div class="form-row">
@@ -365,8 +390,8 @@ async function renderMatchDetail(el) {
         </select>
       </div>
       <div class="two-col" style="margin-top:12px;">
-        <div class="form-row"><label>Goles ${teamLabel(m.home_team_id)}</label><input type="number" min="0" class="m-home-score" value="${m.home_score ?? ''}" /></div>
-        <div class="form-row"><label>Goles ${teamLabel(m.away_team_id)}</label><input type="number" min="0" class="m-away-score" value="${m.away_score ?? ''}" /></div>
+        <div class="form-row"><label>Goles ${esc(teamLabel(m.home_team_id))}</label><input type="number" min="0" class="m-home-score" value="${m.home_score ?? ''}" /></div>
+        <div class="form-row"><label>Goles ${esc(teamLabel(m.away_team_id))}</label><input type="number" min="0" class="m-away-score" value="${m.away_score ?? ''}" /></div>
       </div>
       <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm m-save">Guardar resultado</button>
@@ -402,7 +427,8 @@ async function renderMatchDetail(el) {
   // cantidad de goleadores cargados nunca supere el marcador.
   const savedScore = { home: m.home_score, away: m.away_score };
 
-  el.querySelector('.m-save').addEventListener('click', async () => {
+  const mSaveBtn = el.querySelector('.m-save');
+  mSaveBtn.addEventListener('click', withBusy(mSaveBtn, async () => {
     const status = el.querySelector('.m-status').value;
     const hs = el.querySelector('.m-home-score').value;
     const as = el.querySelector('.m-away-score').value;
@@ -434,7 +460,7 @@ async function renderMatchDetail(el) {
     refreshGoals();
     const { data } = await supabase.from('matches').select('*').order('scheduled_at', { ascending: true });
     MATCHES = data || [];
-  });
+  }));
 
   async function countGoalsByTeam() {
     const { data: goals } = await supabase.from('goals').select('team_id').eq('match_id', m.id);
@@ -444,12 +470,14 @@ async function renderMatchDetail(el) {
     };
   }
 
-  el.querySelector('.m-delete').addEventListener('click', async () => {
+  const mDeleteBtn = el.querySelector('.m-delete');
+  mDeleteBtn.addEventListener('click', withBusy(mDeleteBtn, async () => {
     if (!confirm('¿Eliminar este partido y sus goles?')) return;
-    await supabase.from('matches').delete().eq('id', m.id);
+    const { error } = await supabase.from('matches').delete().eq('id', m.id);
+    if (error) { showAlert(alertEl, 'error', 'No se pudo eliminar: ' + error.message); return; }
     matchesView = { ...matchesView, level: 'matches', matchId: null };
     loadAdminMatches();
-  });
+  }));
 
   // Jugadores inscriptos por cada equipo (datos cargados en la inscripción)
   const [homeRes, awayRes] = await Promise.all([
@@ -466,8 +494,8 @@ async function renderMatchDetail(el) {
 
   playerSel.innerHTML = hasPlayers
     ? groups.filter(g => g.players.length).map(g => `
-        <optgroup label="${g.label}">
-          ${g.players.map(p => `<option value="${p.id}" data-team="${p.team_id}">${p.last_name}, ${p.first_name}</option>`).join('')}
+        <optgroup label="${esc(g.label)}">
+          ${g.players.map(p => `<option value="${esc(p.id)}" data-team="${esc(p.team_id)}">${esc(p.last_name)}, ${esc(p.first_name)}</option>`).join('')}
         </optgroup>`).join('')
     : `<option value="" disabled selected>Ningún equipo cargó jugadores</option>`;
 
@@ -489,16 +517,17 @@ async function renderMatchDetail(el) {
           <div class="announce-item info" style="padding:8px 12px;">
             <span class="icon">⚽</span>
             <div style="flex:1">
-              <strong>${g.players?.last_name || ''}, ${g.players?.first_name || ''}</strong>
-              <div class="when">${g.teams?.name || ''}${g.minute != null ? ' · min ' + g.minute : ''}</div>
+              <strong>${esc(g.players?.last_name || '')}, ${esc(g.players?.first_name || '')}</strong>
+              <div class="when">${esc(g.teams?.name || '')}${g.minute != null ? ' · min ' + esc(g.minute) : ''}</div>
             </div>
-            <button class="btn btn-outline btn-sm" data-del-goal="${g.id}">Quitar</button>
+            <button class="btn btn-outline btn-sm" data-del-goal="${esc(g.id)}">Quitar</button>
           </div>`).join('')
       : `<div class="empty-state" style="padding:10px;">Sin goles cargados.</div>`;
-    list.querySelectorAll('[data-del-goal]').forEach(b => b.addEventListener('click', async () => {
-      await supabase.from('goals').delete().eq('id', b.dataset.delGoal);
+    list.querySelectorAll('[data-del-goal]').forEach(b => b.addEventListener('click', withBusy(b, async () => {
+      const { error } = await supabase.from('goals').delete().eq('id', b.dataset.delGoal);
+      if (error) { showAlert(gAlert, 'error', 'No se pudo quitar el gol: ' + error.message); return; }
       refreshGoals();
-    }));
+    })));
 
     // Contador por equipo: goleadores cargados sobre el marcador guardado
     const counts = {
@@ -508,9 +537,9 @@ async function renderMatchDetail(el) {
     const chip = (side, teamId) => {
       const total = savedScore[side];
       const loaded = counts[side];
-      if (total == null) return `<span class="goal-chip pending">${teamLabel(teamId)}: sin resultado cargado</span>`;
+      if (total == null) return `<span class="goal-chip pending">${esc(teamLabel(teamId))}: sin resultado cargado</span>`;
       const full = loaded === total;
-      return `<span class="goal-chip ${full ? 'full' : ''}">${teamLabel(teamId)}: ${loaded} de ${total} gol${total === 1 ? '' : 'es'}</span>`;
+      return `<span class="goal-chip ${full ? 'full' : ''}">${esc(teamLabel(teamId))}: ${loaded} de ${total} gol${total === 1 ? '' : 'es'}</span>`;
     };
     el.querySelector('.goals-progress').innerHTML =
       chip('home', m.home_team_id) + chip('away', m.away_team_id);
@@ -540,7 +569,8 @@ async function renderMatchDetail(el) {
 
   refreshGoals();
 
-  el.querySelector('.g-add').addEventListener('click', async () => {
+  const gAddBtn = el.querySelector('.g-add');
+  gAddBtn.addEventListener('click', withBusy(gAddBtn, async () => {
     const playerId = playerSel.value;
     const teamId = playerSel.selectedOptions[0]?.dataset.team;
     const minuteVal = el.querySelector('.g-minute').value;
@@ -566,7 +596,7 @@ async function renderMatchDetail(el) {
     if (error) { showAlert(gAlert, 'error', error.message); return; }
     el.querySelector('.g-minute').value = '';
     refreshGoals();
-  });
+  }));
 }
 
 /* ---------------- Boot ---------------- */
@@ -589,10 +619,10 @@ async function loadAdminPhotos() {
   }
 
   el.innerHTML = photos.map((p, i) => `
-    <div class="match-card photo-card" data-id="${p.id}">
-      <img src="${p.image_url}" alt="${p.caption || 'Foto del torneo'}" />
+    <div class="match-card photo-card" data-id="${esc(p.id)}">
+      <img src="${esc(p.image_url)}" alt="${esc(p.caption || 'Foto del torneo')}" />
       <div class="photo-card-body">
-        <div class="photo-card-caption">${p.caption || '<span style="color:var(--text-dim); font-weight:400;">Sin epígrafe</span>'}</div>
+        <div class="photo-card-caption">${p.caption ? esc(p.caption) : '<span style="color:var(--text-dim); font-weight:400;">Sin epígrafe</span>'}</div>
         <div class="photo-card-actions">
           <button class="btn btn-outline p-up" ${i === 0 ? 'disabled' : ''} title="Subir">↑</button>
           <button class="btn btn-outline p-down" ${i === photos.length - 1 ? 'disabled' : ''} title="Bajar">↓</button>
@@ -605,24 +635,30 @@ async function loadAdminPhotos() {
     const id = card.dataset.id;
     const idx = photos.findIndex(p => p.id === id);
 
-    card.querySelector('.p-up')?.addEventListener('click', async () => {
+    const upBtn = card.querySelector('.p-up');
+    upBtn?.addEventListener('click', withBusy(upBtn, async () => {
       if (idx <= 0) return;
       await swapOrder(photos[idx], photos[idx - 1]);
       loadAdminPhotos();
-    });
-    card.querySelector('.p-down')?.addEventListener('click', async () => {
+    }));
+    const downBtn = card.querySelector('.p-down');
+    downBtn?.addEventListener('click', withBusy(downBtn, async () => {
       if (idx >= photos.length - 1) return;
       await swapOrder(photos[idx], photos[idx + 1]);
       loadAdminPhotos();
-    });
-    card.querySelector('.p-del').addEventListener('click', async () => {
+    }));
+    const pDelBtn = card.querySelector('.p-del');
+    pDelBtn.addEventListener('click', withBusy(pDelBtn, async () => {
       if (!confirm('¿Eliminar esta foto del carrusel?')) return;
       const photo = photos[idx];
+      // Primero el registro (lo que la portada muestra); si eso falla, no
+      // borramos el archivo, para no dejar una foto rota en el carrusel.
+      const { error } = await supabase.from('cover_photos').delete().eq('id', photo.id);
+      if (error) { alert('No se pudo eliminar la foto: ' + error.message); return; }
       const path = photo.image_url.split('/portada/').pop();
       if (path) await supabase.storage.from('portada').remove([path]);
-      await supabase.from('cover_photos').delete().eq('id', photo.id);
       loadAdminPhotos();
-    });
+    }));
   });
 }
 
@@ -648,7 +684,11 @@ document.getElementById('uploadPhotoBtn').addEventListener('click', async () => 
   const btn = document.getElementById('uploadPhotoBtn');
   btn.disabled = true; btn.textContent = 'Subiendo...';
 
-  const ext = file.name.split('.').pop();
+  // Extensión derivada del tipo real del archivo, no del nombre (que
+  // puede traer cualquier cosa); el bucket igual valida el mime type.
+  const extByMime = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+  const ext = extByMime[file.type];
+  if (!ext) { btn.disabled = false; btn.textContent = 'Subir foto'; showAlert(alertEl, 'error', 'El archivo tiene que ser JPG, PNG o WEBP.'); return; }
   const path = `${crypto.randomUUID()}.${ext}`;
 
   const { error: uploadError } = await supabase.storage.from('portada').upload(path, file, { cacheControl: '3600', upsert: false });

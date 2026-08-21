@@ -1,6 +1,15 @@
 import { supabase, isSchoolEmail } from './supabaseClient.js';
 
 /* ============================================================
+   Seguridad: escape de HTML para todo dato que venga de la base
+   o del usuario antes de insertarlo con innerHTML. Sin esto, un
+   nombre de equipo como "<img onerror=...>" ejecutaría código en
+   el navegador de cada visitante (XSS almacenado).
+   ============================================================ */
+const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ESC_MAP[c]);
+
+/* ============================================================
    Navegación entre secciones
    ============================================================ */
 const navButtons = document.querySelectorAll('.main-nav button[data-section]');
@@ -125,8 +134,8 @@ async function loadCoverCarousel() {
 
   track.innerHTML = photos.map(p => `
     <div class="carousel-slide">
-      <img src="${p.image_url}" alt="${p.caption ? p.caption.replace(/"/g, '&quot;') : 'Foto del torneo'}" loading="lazy" />
-      ${p.caption ? `<div class="carousel-caption">${p.caption}</div>` : ''}
+      <img src="${esc(p.image_url)}" alt="${p.caption ? esc(p.caption) : 'Foto del torneo'}" loading="lazy" />
+      ${p.caption ? `<div class="carousel-caption">${esc(p.caption)}</div>` : ''}
     </div>`).join('');
 
   dotsEl.innerHTML = photos.map((_, i) => `<button class="carousel-dot${i === 0 ? ' active' : ''}" data-i="${i}" aria-label="Ir a la foto ${i + 1}"></button>`).join('');
@@ -160,16 +169,24 @@ async function loadCoverCarousel() {
 
     let autoplayTimer = null;
     function startAutoplay() {
-      if (prefersReducedMotion) return;
+      if (prefersReducedMotion || autoplayTimer) return;
       autoplayTimer = setInterval(() => goTo(current + 1), 5000);
     }
-    function resetAutoplay() {
+    function stopAutoplay() {
       clearInterval(autoplayTimer);
+      autoplayTimer = null;
+    }
+    function resetAutoplay() {
+      stopAutoplay();
       startAutoplay();
     }
     const carousel = document.getElementById('coverCarousel');
-    carousel.addEventListener('mouseenter', () => clearInterval(autoplayTimer));
+    carousel.addEventListener('mouseenter', stopAutoplay);
     carousel.addEventListener('mouseleave', startAutoplay);
+    // No hacer trabajo invisible mientras la pestaña está en segundo plano
+    document.addEventListener('visibilitychange', () => {
+      document.hidden ? stopAutoplay() : startAutoplay();
+    });
     startAutoplay();
   }
 }
@@ -196,13 +213,13 @@ async function loadPortadaAvisos() {
   if (!vigentes.length) { wrap.hidden = true; inner.innerHTML = ''; return; }
 
   inner.innerHTML = vigentes.map(a => `
-    <div class="portada-aviso-item ${a.kind}" data-id="${a.id}">
+    <div class="portada-aviso-item ${a.kind === 'suspension' ? 'suspension' : 'info'}" data-id="${esc(a.id)}">
       <span class="portada-aviso-icon">${a.kind === 'suspension' ? '🌧️' : 'ℹ️'}</span>
       <div class="portada-aviso-text">
-        <strong>${a.title}</strong>
-        ${a.message || ''}
+        <strong>${esc(a.title)}</strong>
+        ${esc(a.message || '')}
       </div>
-      <button class="portada-aviso-close" aria-label="Cerrar aviso" data-id="${a.id}">✕</button>
+      <button class="portada-aviso-close" aria-label="Cerrar aviso" data-id="${esc(a.id)}">✕</button>
     </div>`).join('');
 
   inner.querySelectorAll('.portada-aviso-close').forEach(btn => {
@@ -249,8 +266,8 @@ async function loadStandings() {
           ${data.map((t, i) => `
             <tr>
               <td data-label="#"><span class="pos-num">${i + 1}</span></td>
-              <td class="team-name" data-label="Equipo">${t.name}</td>
-              <td data-label="Curso">${t.course}</td>
+              <td class="team-name" data-label="Equipo">${esc(t.name)}</td>
+              <td data-label="Curso">${esc(t.course)}</td>
               <td class="pts-cell" data-label="Pts">${t.pts}</td>
             </tr>`).join('')}
         </tbody>
@@ -280,8 +297,8 @@ async function loadStandings() {
             <tr>
               <td class="col-pos"><span class="pos-num">${i + 1}</span></td>
               <td class="col-team">
-                <span class="ft-name">${t.name}</span>
-                <span class="ft-course">${t.course}</span>
+                <span class="ft-name">${esc(t.name)}</span>
+                <span class="ft-course">${esc(t.course)}</span>
               </td>
               <td class="pts-cell">${t.pts}</td>
               <td>${t.pj}</td>
@@ -320,11 +337,11 @@ async function loadMatches() {
         <span class="match-status status-${m.status}">${statusLabel[m.status] || m.status}</span>
       </div>
       <div class="match-teams">
-        <div class="match-team home">${teamName(teamMap, m.home_team_id)}</div>
+        <div class="match-team home">${esc(teamName(teamMap, m.home_team_id))}</div>
         <div class="match-score">${showScore && m.home_score !== null && m.away_score !== null ? `${m.home_score} - ${m.away_score}` : 'vs'}</div>
-        <div class="match-team away">${teamName(teamMap, m.away_team_id)}</div>
+        <div class="match-team away">${esc(teamName(teamMap, m.away_team_id))}</div>
       </div>
-      <div class="match-venue">🗓️ ${fmtDate(m.scheduled_at)}${m.venue ? ' · 📍 ' + m.venue : ''}</div>
+      <div class="match-venue">🗓️ ${fmtDate(m.scheduled_at)}${m.venue ? ' · 📍 ' + esc(m.venue) : ''}</div>
     </div>`;
 
   const resultsEl = document.getElementById('resultsContainer');
@@ -342,7 +359,8 @@ async function loadMatches() {
    Goleadores
    ============================================================ */
 async function loadScorers() {
-  const { data } = await supabase.from('top_scorers').select('*');
+  // Solo se muestran los 3 primeros: no hace falta traer la lista entera
+  const { data } = await supabase.from('top_scorers').select('*').limit(3);
   const el = document.getElementById('scorersContainer');
   const total = data?.length || 0;
   if (!total) { el.innerHTML = `<div class="empty-state"><div class="icon-big">🥅</div>Todavía no hay goles cargados.</div>`; return; }
@@ -360,8 +378,8 @@ async function loadScorers() {
           <div class="podium-medal">${medals[i]}</div>
           <div class="podium-goals">${p.goals}<span>${p.goals === 1 ? 'gol' : 'goles'}</span></div>
           <div class="podium-bar">
-            <div class="podium-name">${p.first_name} ${p.last_name}</div>
-            <div class="podium-detail">${p.team_name}</div>
+            <div class="podium-name">${esc(p.first_name)} ${esc(p.last_name)}</div>
+            <div class="podium-detail">${esc(p.team_name)}</div>
           </div>
         </div>`;
       }).join('')}
@@ -394,9 +412,9 @@ function renderPendingPlayers() {
   const list = document.getElementById('playersList');
   list.innerHTML = pendingPlayers.map((p, i) => `
     <div class="player-row">
-      <div class="form-row"><label>Nombre</label><input value="${p.first_name}" disabled /></div>
-      <div class="form-row"><label>Apellido</label><input value="${p.last_name}" disabled /></div>
-      <div class="form-row"><label>Curso</label><input value="${p.course}" disabled /></div>
+      <div class="form-row"><label>Nombre</label><input value="${esc(p.first_name)}" disabled /></div>
+      <div class="form-row"><label>Apellido</label><input value="${esc(p.last_name)}" disabled /></div>
+      <div class="form-row"><label>Curso</label><input value="${esc(p.course)}" disabled /></div>
       <button class="remove-player" type="button" title="Quitar jugador" data-i="${i}">✕</button>
     </div>`).join('');
   list.querySelectorAll('.remove-player').forEach(btn => {

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Panel Organizadores · Torneo Ciclo Superior</title>
 <link rel="icon" href="assets/logo.png" />
-<link rel="stylesheet" href="css/style.css?v=12" />
+<link rel="stylesheet" href="css/style.css?v=14" />
 </head>
 <body>
 
@@ -65,7 +65,7 @@
           </div>
           <div class="form-row">
             <label for="annTitle">Título</label>
-            <input id="annTitle" placeholder="Ej: Se suspende la fecha 4 por lluvia" />
+            <input id="annTitle" maxlength="120" placeholder="Ej: Se suspende la fecha 4 por lluvia" />
           </div>
           <button class="btn btn-primary" id="publishAnnBtn">Publicar aviso</button>
         </div>
@@ -97,7 +97,7 @@
           </div>
           <div class="form-row">
             <label for="matchDay">Fecha (jornada Nº)</label>
-            <input id="matchDay" type="number" min="1" value="1" />
+            <input id="matchDay" type="number" min="1" max="99" value="1" />
           </div>
           <div class="form-row">
             <label for="matchDate">Día</label>
@@ -142,7 +142,7 @@
             </div>
             <div class="form-row">
               <label for="photoCaption">Epígrafe (opcional)</label>
-              <input id="photoCaption" placeholder="Ej: Final Ciclo Superior 2025" />
+              <input id="photoCaption" maxlength="120" placeholder="Ej: Final Ciclo Superior 2025" />
             </div>
           </div>
           <button class="btn btn-primary" id="uploadPhotoBtn">Subir foto</button>
@@ -161,6 +161,6 @@
 
 </main>
 
-<script type="module" src="js/admin.js?v=12"></script>
+<script type="module" src="js/admin.js?v=14"></script>
 </body>
 </html>

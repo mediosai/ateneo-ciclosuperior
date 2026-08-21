@@ -6,7 +6,7 @@
 <title>Torneo Ciclo Superior · Casa Salesiana Juan Segundo Fernández</title>
 <meta name="description" content="Torneo de fútbol escolar de Ciclo Superior - Casa Salesiana Juan Segundo Fernández, Obra de Don Bosco." />
 <link rel="icon" href="assets/logo.png" />
-<link rel="stylesheet" href="css/style.css?v=12" />
+<link rel="stylesheet" href="css/style.css?v=14" />
 </head>
 <body id="top">
 
@@ -171,25 +171,25 @@
         <div class="two-col">
           <div class="form-row">
             <label for="teamNameInput">Nombre del equipo</label>
-            <input id="teamNameInput" placeholder="Ej: Los Tigres" />
+            <input id="teamNameInput" maxlength="60" placeholder="Ej: Los Tigres" />
           </div>
           <div class="form-row">
             <label for="teamCourseInput">Curso</label>
-            <input id="teamCourseInput" placeholder="Ej: 5° Año A" />
+            <input id="teamCourseInput" maxlength="30" placeholder="Ej: 5° Año A" />
           </div>
         </div>
         <div class="form-row">
           <label for="teamEmailInput">Mail de contacto del equipo</label>
-          <input type="email" id="teamEmailInput" placeholder="nombre.apellido@csjsf.edu.ar" />
+          <input type="email" id="teamEmailInput" maxlength="100" placeholder="nombre.apellido@csjsf.edu.ar" />
         </div>
       </div>
 
       <h4 style="margin:20px 0 8px;">Jugadores</h4>
       <div id="playersList"></div>
       <div class="player-row">
-        <div class="form-row"><label>Nombre</label><input id="newFirstName" placeholder="Nombre" /></div>
-        <div class="form-row"><label>Apellido</label><input id="newLastName" placeholder="Apellido" /></div>
-        <div class="form-row"><label>Curso</label><input id="newCourse" placeholder="Curso" /></div>
+        <div class="form-row"><label>Nombre</label><input id="newFirstName" maxlength="50" placeholder="Nombre" /></div>
+        <div class="form-row"><label>Apellido</label><input id="newLastName" maxlength="50" placeholder="Apellido" /></div>
+        <div class="form-row"><label>Curso</label><input id="newCourse" maxlength="30" placeholder="Curso" /></div>
         <button class="btn btn-outline btn-sm" id="addPlayerBtn" type="button">+ Agregar</button>
       </div>
 
@@ -200,6 +200,6 @@
 
 </main>
 
-<script type="module" src="js/main.js?v=12"></script>
+<script type="module" src="js/main.js?v=14"></script>
 </body>
 </html>
