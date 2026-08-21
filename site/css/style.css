@@ -442,6 +442,7 @@ button { font-family: inherit; cursor: pointer; }
   animation-name: alBallIn;
   animation-delay: .85s;
   transform-origin: 200px 196px;
+  transform-box: view-box;
 }
 .al-word { animation-name: alFadeUp; animation-delay: 1s; }
 .al-sub  { animation-name: alTrack;  animation-delay: 1.15s; }
@@ -471,13 +472,18 @@ button { font-family: inherit; cursor: pointer; }
   to   { opacity: 1; letter-spacing: 6px; }
 }
 
-/* La pelota late apenas, una vez terminada la entrada */
-@media (prefers-reduced-motion: no-preference) {
-  .al-ball { animation: alBallIn .6s cubic-bezier(.22,1,.36,1) .85s backwards, alBallIdle 4s ease-in-out 1.6s infinite; }
+/* La pelota queda colgando del vértice de la A y se hamaca de lado a lado.
+   El pivote va arriba de la pelota, para que el movimiento sea de péndulo. */
+.al-ball-swing {
+  transform-origin: 200px 146px;
+  transform-box: view-box;
 }
-@keyframes alBallIdle {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50%      { transform: translateY(-5px) rotate(8deg); }
+@media (prefers-reduced-motion: no-preference) {
+  .al-ball-swing { animation: alBallSwing 3.4s ease-in-out 1.45s infinite; }
+}
+@keyframes alBallSwing {
+  0%, 100% { transform: rotate(-11deg); }
+  50%      { transform: rotate(11deg); }
 }
 
 @media (max-width: 480px) {
@@ -1105,8 +1111,8 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
   .brand:hover .brand-logo { transform: none; }
   .btn:active, .team-chip:active, .main-nav button:active, .main-nav a:active { transform: none; }
   .match-card:hover, .announce-item:hover { transform: none; }
-  /* El logo se muestra armado, sin entrada ni latido */
-  .al-dot, .al-wing, .al-a, .al-ball, .al-word, .al-sub {
+  /* El logo se muestra armado, sin entrada ni hamacado */
+  .al-dot, .al-wing, .al-a, .al-ball, .al-ball-swing, .al-word, .al-sub {
     animation: none !important;
     opacity: 1;
     transform: none;
