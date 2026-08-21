@@ -389,6 +389,101 @@ button { font-family: inherit; cursor: pointer; }
   letter-spacing: -0.02em;
   line-height: 1.08;
 }
+
+/* Oculta visualmente pero sigue disponible para lectores de pantalla */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------- Logo animado del Ateneo ---------------- */
+.ateneo-logo {
+  display: block;
+  width: min(290px, 68vw);
+  height: auto;
+  margin: 4px auto 0;
+  overflow: visible;
+}
+.ateneo-logo .al-word {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  font-size: 62px;
+  letter-spacing: 0.01em;
+  fill: #fff;
+}
+.ateneo-logo .al-sub {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 6px;
+  fill: var(--gold);
+}
+
+/* Entrada: cada pieza aparece en el orden en que se "arma" el logo */
+.al-dot, .al-wing, .al-a, .al-ball, .al-word, .al-sub {
+  animation-duration: .6s;
+  animation-fill-mode: backwards;
+  animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+}
+.al-dot { animation-name: alPop; transform-origin: center; }
+.al-dot-1 { animation-delay: .05s; }
+.al-dot-2 { animation-delay: .15s; }
+.al-dot-3 { animation-delay: .25s; }
+.al-wing { animation-name: alDrop; }
+.al-wing-left  { animation-delay: .35s; }
+.al-wing-right { animation-delay: .42s; }
+.al-a { animation-name: alRise; animation-delay: .5s; animation-duration: .7s; }
+.al-ball {
+  animation-name: alBallIn;
+  animation-delay: .85s;
+  transform-origin: 200px 196px;
+}
+.al-word { animation-name: alFadeUp; animation-delay: 1s; }
+.al-sub  { animation-name: alTrack;  animation-delay: 1.15s; }
+
+@keyframes alPop {
+  from { opacity: 0; transform: translateY(-14px) scale(.5); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes alDrop {
+  from { opacity: 0; transform: translateY(-18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes alRise {
+  from { opacity: 0; transform: translateY(26px) scaleY(.82); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+@keyframes alBallIn {
+  from { opacity: 0; transform: scale(.3) rotate(-140deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+@keyframes alFadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes alTrack {
+  from { opacity: 0; letter-spacing: 1px; }
+  to   { opacity: 1; letter-spacing: 6px; }
+}
+
+/* La pelota late apenas, una vez terminada la entrada */
+@media (prefers-reduced-motion: no-preference) {
+  .al-ball { animation: alBallIn .6s cubic-bezier(.22,1,.36,1) .85s backwards, alBallIdle 4s ease-in-out 1.6s infinite; }
+}
+@keyframes alBallIdle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-5px) rotate(8deg); }
+}
+
+@media (max-width: 480px) {
+  .ateneo-logo .al-sub { font-size: 13px; letter-spacing: 5px; }
+  @keyframes alTrack { from { opacity: 0; letter-spacing: 1px; } to { opacity: 1; letter-spacing: 5px; } }
+}
 .hero p {
   color: #cdd6e8;
   max-width: 560px;
@@ -1010,6 +1105,12 @@ tbody tr:nth-child(3) .pos-num { background: #e7c9a8; color: var(--navy); }
   .brand:hover .brand-logo { transform: none; }
   .btn:active, .team-chip:active, .main-nav button:active, .main-nav a:active { transform: none; }
   .match-card:hover, .announce-item:hover { transform: none; }
+  /* El logo se muestra armado, sin entrada ni latido */
+  .al-dot, .al-wing, .al-a, .al-ball, .al-word, .al-sub {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-contrast: more) {

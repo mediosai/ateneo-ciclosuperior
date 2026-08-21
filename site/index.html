@@ -6,7 +6,7 @@
 <title>Torneo Ciclo Superior · Casa Salesiana Juan Segundo Fernández</title>
 <meta name="description" content="Torneo de fútbol escolar de Ciclo Superior - Casa Salesiana Juan Segundo Fernández, Obra de Don Bosco." />
 <link rel="icon" href="assets/logo.png" />
-<link rel="stylesheet" href="css/style.css?v=8" />
+<link rel="stylesheet" href="css/style.css?v=9" />
 </head>
 <body id="top">
 
@@ -49,7 +49,35 @@
 
 <section class="hero">
   <span class="pill">⚽ Temporada 2026</span>
-  <h1>Ateneo - Ciclo Superior</h1>
+
+  <h1 class="visually-hidden">Ateneo - Ciclo Superior</h1>
+  <svg class="ateneo-logo" viewBox="0 0 400 330" role="img" aria-label="Ateneo - Ciclo Superior" xmlns="http://www.w3.org/2000/svg">
+    <!-- Cabezas -->
+    <circle class="al-dot al-dot-1" cx="140" cy="62" r="22" fill="#C1272D" />
+    <circle class="al-dot al-dot-2" cx="200" cy="55" r="24" fill="#F5A623" />
+    <circle class="al-dot al-dot-3" cx="260" cy="62" r="22" fill="#2E4A6B" />
+
+    <!-- Brazos -->
+    <polygon class="al-wing al-wing-left"  points="92,100 188,100 140,165" fill="#F5A623" />
+    <polygon class="al-wing al-wing-right" points="212,100 308,100 260,165" fill="#F5A623" />
+
+    <!-- Cuerpo en A -->
+    <polygon class="al-a" points="200,98 322,232 258,232 200,164 142,232 78,232" fill="#2E4A6B" />
+
+    <!-- Pelota -->
+    <g class="al-ball">
+      <circle cx="200" cy="196" r="27" fill="#fff" />
+      <g fill="#2E4A6B">
+        <polygon points="200,180 212,189 207,203 193,203 188,189" />
+        <path d="M200,169 L200,180 M186,186 L188,189 M214,186 L212,189 M195,215 L193,203 M205,215 L207,203" stroke="#2E4A6B" stroke-width="3.4" fill="none" stroke-linecap="round" />
+      </g>
+      <circle cx="200" cy="196" r="27" fill="none" stroke="#2E4A6B" stroke-width="3" />
+    </g>
+
+    <!-- Texto -->
+    <text class="al-word" x="200" y="292" text-anchor="middle">ATENEO</text>
+    <text class="al-sub" x="200" y="318" text-anchor="middle">CICLO SUPERIOR</text>
+  </svg>
 </section>
 
 <main class="container">
@@ -152,6 +180,6 @@
 
 </main>
 
-<script type="module" src="js/main.js?v=8"></script>
+<script type="module" src="js/main.js?v=9"></script>
 </body>
 </html>
