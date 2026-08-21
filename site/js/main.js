@@ -388,10 +388,13 @@ async function loadScorers() {
       ${visualOrder.filter(i => top3[i]).map(i => {
         const p = top3[i];
         const nombre = `${esc(p.first_name)} ${esc(p.last_name)}`;
+        const goles = `${p.goals} ${p.goals === 1 ? 'gol' : 'goles'}`;
+        // Solo el primer puesto es interactivo
+        const esPrimero = i === 0;
         return `
-        <div class="podium-place place-${i + 1}" tabindex="0" role="button"
-             data-goals="${p.goals}"
-             aria-label="${nombre}, ${p.goals} ${p.goals === 1 ? 'gol' : 'goles'}. Tocá para verlos caer.">
+        <div class="podium-place place-${i + 1}${esPrimero ? '' : ' podium-static'}"
+             ${esPrimero ? `tabindex="0" role="button" data-goals="${p.goals}"` : ''}
+             aria-label="${nombre}, ${goles}${esPrimero ? '. Tocá para verlos caer.' : ''}">
           <div class="podium-medal">${medals[i]}</div>
           <div class="podium-goals">${p.goals}<span>${p.goals === 1 ? 'gol' : 'goles'}</span></div>
           <div class="podium-bar">
@@ -402,18 +405,18 @@ async function loadScorers() {
       }).join('')}
     </div>`;
 
-  el.querySelectorAll('.podium-place').forEach(place => {
+  const primero = el.querySelector('.podium-place.place-1');
+  if (primero) {
     const activar = () => {
       // La medalla salta mientras caen las pelotas: refuerza qué se tocó
-      el.querySelectorAll('.podium-place').forEach(p => p.classList.remove('picked'));
-      place.classList.add('picked');
-      lloverPelotas(parseInt(place.dataset.goals, 10));
+      primero.classList.add('picked');
+      lloverPelotas(parseInt(primero.dataset.goals, 10));
     };
-    place.addEventListener('click', activar);
-    place.addEventListener('keydown', (e) => {
+    primero.addEventListener('click', activar);
+    primero.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
     });
-  });
+  }
 }
 
 /* ============================================================
@@ -437,10 +440,12 @@ async function loadMvps() {
         const p = top3[i];
         const nombre = `${esc(p.first_name)} ${esc(p.last_name)}`;
         const premios = `${p.awards} ${p.awards === 1 ? 'premio' : 'premios'}`;
+        // Solo el primer puesto es interactivo
+        const esPrimero = i === 0;
         return `
-        <div class="podium-place place-${i + 1}" tabindex="0" role="button"
-             data-place="${i + 1}"
-             aria-label="${nombre}, ${premios}${i === 0 ? '. Tocá para recibir el balón de oro.' : ''}">
+        <div class="podium-place place-${i + 1}${esPrimero ? '' : ' podium-static'}"
+             ${esPrimero ? 'tabindex="0" role="button"' : ''}
+             aria-label="${nombre}, ${premios}${esPrimero ? '. Tocá para recibir el balón de oro.' : ''}">
           <div class="podium-medal">${medals[i]}</div>
           <div class="podium-goals">${p.awards}<span>${p.awards === 1 ? 'premio' : 'premios'}</span></div>
           <div class="podium-bar">
@@ -451,18 +456,17 @@ async function loadMvps() {
       }).join('')}
     </div>`;
 
-  el.querySelectorAll('.podium-place').forEach(place => {
+  const primero = el.querySelector('.podium-place.place-1');
+  if (primero) {
     const activar = () => {
-      el.querySelectorAll('.podium-place').forEach(p => p.classList.remove('picked'));
-      place.classList.add('picked');
-      // Al primero lo vienen a premiar con el balón de oro
-      if (place.dataset.place === '1') entregarBalonDeOro();
+      primero.classList.add('picked');
+      entregarBalonDeOro();
     };
-    place.addEventListener('click', activar);
-    place.addEventListener('keydown', (e) => {
+    primero.addEventListener('click', activar);
+    primero.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
     });
-  });
+  }
 }
 
 let entregaTimer = null;

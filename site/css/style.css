@@ -222,11 +222,11 @@ button { font-family: inherit; cursor: pointer; }
 /* ---------------- Entrega del balón de oro ---------------- */
 .entrega {
   position: fixed;
-  right: 0;
+  left: 0;
   bottom: 0;
   z-index: 9998;
   pointer-events: none;
-  transform: translateX(112%);
+  transform: translateX(-112%);
   opacity: 0;
 }
 .entrega.show {
@@ -238,13 +238,13 @@ button { font-family: inherit; cursor: pointer; }
   display: block;
   filter: drop-shadow(-12px 10px 22px rgba(13, 27, 48, .32));
 }
-/* Entra, se queda ofreciendo el balón y se vuelve */
+/* Entra desde la izquierda, se queda ofreciendo el balón y se vuelve */
 @keyframes entregaEntra {
-  0%   { transform: translateX(112%); opacity: 0; }
-  14%  { transform: translateX(-2%);  opacity: 1; }
-  20%  { transform: translateX(2%);   opacity: 1; }
-  78%  { transform: translateX(0);    opacity: 1; }
-  100% { transform: translateX(112%); opacity: 0; }
+  0%   { transform: translateX(-112%); opacity: 0; }
+  14%  { transform: translateX(2%);    opacity: 1; }
+  20%  { transform: translateX(-2%);   opacity: 1; }
+  78%  { transform: translateX(0);     opacity: 1; }
+  100% { transform: translateX(-112%); opacity: 0; }
 }
 /* El balón late apenas, como ofreciéndolo */
 .entrega.show .entrega-balon { animation: balonOfrece 1.7s ease-in-out .9s 3; transform-origin: 206px 168px; transform-box: view-box; }
@@ -296,19 +296,27 @@ button { font-family: inherit; cursor: pointer; }
 .podium-place:active { transform: translateY(-6px) scale(.97); transition: transform .1s ease-out; }
 .podium-medal {
   font-size: 34px;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   transition: transform .35s var(--ease);
 }
-.podium-place.picked .podium-medal { transform: scale(1.25) rotate(-8deg); }
+.podium-place.picked .podium-medal { transform: scale(1.18) rotate(-8deg); }
+
+/* 2º y 3º puesto: se muestran, pero no responden al toque */
+.podium-place.podium-static { cursor: default; }
+.podium-place.podium-static:hover { transform: none; }
+.podium-place.podium-static:hover .podium-bar { filter: none; }
+.podium-place.podium-static:active { transform: none; }
 .podium-goals {
   font-family: 'Poppins', sans-serif;
   font-weight: 800;
   font-size: 26px;
   color: var(--text);
   line-height: 1;
-  margin-bottom: 2px;
+  /* Aire suficiente para que "goles"/"premios" no quede pegado a la
+     barra del podio, ni siquiera con la medalla agrandada al tocar */
+  margin-bottom: 12px;
 }
-.podium-goals span { display: block; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
+.podium-goals span { display: block; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 10.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em; margin-top: 5px; }
 .podium-bar {
   width: 100%;
   border-radius: 14px 14px 0 0;
