@@ -6,7 +6,7 @@
 <title>Torneo Ciclo Superior · Casa Salesiana Juan Segundo Fernández</title>
 <meta name="description" content="Torneo de fútbol escolar de Ciclo Superior - Casa Salesiana Juan Segundo Fernández, Obra de Don Bosco." />
 <link rel="icon" href="assets/logo.png" />
-<link rel="stylesheet" href="css/style.css?v=14" />
+<link rel="stylesheet" href="css/style.css?v=15" />
 </head>
 <body id="top">
 
@@ -31,23 +31,17 @@
   </div>
 </header>
 
-<section class="cover-carousel" id="coverCarousel" aria-label="Portada del torneo">
+<!-- Portada: el carrusel de fotos va de fondo y el logo animado encima -->
+<section class="hero cover-carousel" id="coverCarousel" aria-label="Portada del torneo">
   <div class="carousel-track" id="carouselTrack">
-    <div class="carousel-empty" id="carouselEmpty">
-      <span class="icon-big">📸</span>
-      <p>Pronto vas a ver acá fotos del torneo.</p>
-    </div>
+    <div class="carousel-empty" id="carouselEmpty"></div>
   </div>
+  <div class="cover-scrim"></div>
   <button class="carousel-arrow prev" id="carouselPrev" aria-label="Foto anterior" hidden>‹</button>
   <button class="carousel-arrow next" id="carouselNext" aria-label="Foto siguiente" hidden>›</button>
   <div class="carousel-dots" id="carouselDots"></div>
-</section>
 
-<section class="portada-avisos" id="portadaAvisos" hidden>
-  <div class="portada-avisos-inner" id="portadaAvisosInner"></div>
-</section>
-
-<section class="hero">
+  <div class="cover-content">
   <span class="pill">⚽ Temporada 2026</span>
 
   <h1 class="visually-hidden">Ateneo - Ciclo Superior</h1>
@@ -98,6 +92,11 @@
       <circle cx="200" cy="196" r="27" fill="none" stroke="#2E4A6B" stroke-width="2.6" />
     </g>
   </svg>
+  </div>
+</section>
+
+<section class="portada-avisos" id="portadaAvisos" hidden>
+  <div class="portada-avisos-inner" id="portadaAvisosInner"></div>
 </section>
 
 <main class="container">
@@ -200,6 +199,6 @@
 
 </main>
 
-<script type="module" src="js/main.js?v=14"></script>
+<script type="module" src="js/main.js?v=15"></script>
 </body>
 </html>

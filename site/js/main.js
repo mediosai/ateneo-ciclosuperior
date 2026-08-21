@@ -21,7 +21,9 @@ function showSection(name) {
   sections.forEach(s => s.classList.toggle('active', s.id === `sec-${name}`));
   navButtons.forEach(b => b.classList.toggle('active', b.dataset.section === name));
   mainNav.classList.remove('open');
-  window.scrollTo({ top: document.querySelector('.hero').nextElementSibling.offsetTop - 90, behavior: 'smooth' });
+  // Desplaza hasta el contenido, dejando la portada arriba
+  const contenido = document.querySelector('main.container');
+  if (contenido) window.scrollTo({ top: Math.max(0, contenido.offsetTop - 90), behavior: 'smooth' });
 }
 navButtons.forEach(btn => btn.addEventListener('click', () => showSection(btn.dataset.section)));
 navToggle.addEventListener('click', () => mainNav.classList.toggle('open'));
