@@ -417,6 +417,67 @@ async function loadScorers() {
 }
 
 /* ============================================================
+   Jugador del Torneo: quién juntó más premios al jugador del partido
+   ============================================================ */
+async function loadMvps() {
+  const { data } = await supabase.from('top_mvps').select('*').limit(3);
+  const el = document.getElementById('mvpsContainer');
+  if (!data || !data.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon-big">🏅</div>Todavía no se eligió el jugador de ningún partido.</div>`;
+    return;
+  }
+
+  const top3 = data.slice(0, 3);
+  const medals = ['🥇', '🥈', '🥉'];
+  const visualOrder = [1, 0, 2]; // 2º, 1º, 3º de izquierda a derecha
+
+  el.innerHTML = `
+    <div class="podium">
+      ${visualOrder.filter(i => top3[i]).map(i => {
+        const p = top3[i];
+        const nombre = `${esc(p.first_name)} ${esc(p.last_name)}`;
+        const premios = `${p.awards} ${p.awards === 1 ? 'premio' : 'premios'}`;
+        return `
+        <div class="podium-place place-${i + 1}" tabindex="0" role="button"
+             data-place="${i + 1}"
+             aria-label="${nombre}, ${premios}${i === 0 ? '. Tocá para recibir el balón de oro.' : ''}">
+          <div class="podium-medal">${medals[i]}</div>
+          <div class="podium-goals">${p.awards}<span>${p.awards === 1 ? 'premio' : 'premios'}</span></div>
+          <div class="podium-bar">
+            <div class="podium-name">${nombre}</div>
+            <div class="podium-detail">${esc(p.team_name)}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  el.querySelectorAll('.podium-place').forEach(place => {
+    const activar = () => {
+      el.querySelectorAll('.podium-place').forEach(p => p.classList.remove('picked'));
+      place.classList.add('picked');
+      // Al primero lo vienen a premiar con el balón de oro
+      if (place.dataset.place === '1') entregarBalonDeOro();
+    };
+    place.addEventListener('click', activar);
+    place.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activar(); }
+    });
+  });
+}
+
+let entregaTimer = null;
+function entregarBalonDeOro() {
+  const capa = document.getElementById('entregaLayer');
+  if (!capa || prefersReducedMotion) return;
+  // Reiniciar la animación si ya estaba corriendo
+  capa.classList.remove('show');
+  void capa.offsetWidth; // fuerza el reinicio del ciclo de animación
+  capa.classList.add('show');
+  clearTimeout(entregaTimer);
+  entregaTimer = setTimeout(() => capa.classList.remove('show'), 5600);
+}
+
+/* ============================================================
    Lluvia de pelotas: una por cada gol del jugador tocado.
    Cada una es un modelo distinto de pelota mundialista.
    ============================================================ */
@@ -585,6 +646,7 @@ async function boot() {
   loadStandings();
   loadMatches();
   loadScorers();
+  loadMvps();
   renderPendingPlayers();
 }
 boot();

@@ -527,6 +527,10 @@ async function renderMatchDetail(el) {
         <div class="form-row"><label>Goles ${esc(teamLabel(m.home_team_id))}</label><input type="number" min="0" class="m-home-score" value="${m.home_score ?? ''}" /></div>
         <div class="form-row"><label>Goles ${esc(teamLabel(m.away_team_id))}</label><input type="number" min="0" class="m-away-score" value="${m.away_score ?? ''}" /></div>
       </div>
+      <div class="form-row" style="margin-top:12px;">
+        <label>🏅 Jugador del partido</label>
+        <select class="m-mvp"></select>
+      </div>
       <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
         <button class="btn btn-primary btn-sm m-save">Guardar resultado</button>
         <button class="btn btn-outline btn-sm m-delete" style="color:var(--red);">Eliminar partido</button>
@@ -568,6 +572,13 @@ async function renderMatchDetail(el) {
     const as = el.querySelector('.m-away-score').value;
     const newHome = hs === '' ? null : parseInt(hs);
     const newAway = as === '' ? null : parseInt(as);
+    const mvp = el.querySelector('.m-mvp').value || null;
+
+    // El jugador del partido solo tiene sentido en un partido jugado
+    if (mvp && status !== 'played') {
+      showAlert(alertEl, 'error', 'Para elegir el jugador del partido, marcá el estado como "Jugado".');
+      return;
+    }
 
     // No permitir bajar el marcador por debajo de los goleadores ya cargados
     const counts = await countGoalsByTeam();
@@ -584,6 +595,7 @@ async function renderMatchDetail(el) {
       status,
       home_score: newHome,
       away_score: newAway,
+      mvp_player_id: mvp,
       updated_at: new Date().toISOString()
     }).eq('id', m.id);
     if (error) { showAlert(alertEl, 'error', error.message); return; }
@@ -632,6 +644,16 @@ async function renderMatchDetail(el) {
           ${g.players.map(p => `<option value="${esc(p.id)}" data-team="${esc(p.team_id)}">${esc(p.last_name)}, ${esc(p.first_name)}</option>`).join('')}
         </optgroup>`).join('')
     : `<option value="" disabled selected>Ningún equipo cargó jugadores</option>`;
+
+  // Jugador del partido: mismos jugadores, con opción de dejarlo vacío
+  const mvpSel = el.querySelector('.m-mvp');
+  mvpSel.innerHTML = hasPlayers
+    ? `<option value="">Sin elegir</option>` + groups.filter(g => g.players.length).map(g => `
+        <optgroup label="${esc(g.label)}">
+          ${g.players.map(p => `<option value="${esc(p.id)}"${p.id === m.mvp_player_id ? ' selected' : ''}>${esc(p.last_name)}, ${esc(p.first_name)}</option>`).join('')}
+        </optgroup>`).join('')
+    : `<option value="">Ningún equipo cargó jugadores</option>`;
+  if (!hasPlayers) mvpSel.disabled = true;
 
   const gAlert = el.querySelector('.g-alert');
   if (!hasPlayers) {

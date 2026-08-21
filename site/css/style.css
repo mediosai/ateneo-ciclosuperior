@@ -219,6 +219,55 @@ button { font-family: inherit; cursor: pointer; }
   96%, 100% { transform: scale(1, 1); }
 }
 
+/* ---------------- Entrega del balón de oro ---------------- */
+.entrega {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 9998;
+  pointer-events: none;
+  transform: translateX(112%);
+  opacity: 0;
+}
+.entrega.show {
+  animation: entregaEntra 5.4s cubic-bezier(.2, .8, .3, 1) forwards;
+}
+.entrega-fig {
+  width: min(300px, 62vw);
+  height: auto;
+  display: block;
+  filter: drop-shadow(-12px 10px 22px rgba(13, 27, 48, .32));
+}
+/* Entra, se queda ofreciendo el balón y se vuelve */
+@keyframes entregaEntra {
+  0%   { transform: translateX(112%); opacity: 0; }
+  14%  { transform: translateX(-2%);  opacity: 1; }
+  20%  { transform: translateX(2%);   opacity: 1; }
+  78%  { transform: translateX(0);    opacity: 1; }
+  100% { transform: translateX(112%); opacity: 0; }
+}
+/* El balón late apenas, como ofreciéndolo */
+.entrega.show .entrega-balon { animation: balonOfrece 1.7s ease-in-out .9s 3; transform-origin: 206px 168px; transform-box: view-box; }
+@keyframes balonOfrece {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-6px) scale(1.06); }
+}
+/* Destello sobre el oro */
+.entrega.show .entrega-brillo { animation: brilloOro 1.7s ease-in-out .9s 3; }
+@keyframes brilloOro {
+  0%, 100% { opacity: .55; }
+  50%      { opacity: 1; }
+}
+
+/* ---------------- Premios ---------------- */
+.premios-sub {
+  margin: 6px 0 2px;
+  font-size: 15px;
+  color: var(--text-dim);
+  font-weight: 700;
+}
+.premios-sub + div { margin-bottom: 26px; }
+
 /* ---------------- Podio de goleadores ---------------- */
 .podium-place:focus-visible {
   outline: 3px solid var(--gold);
