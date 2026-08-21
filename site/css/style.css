@@ -164,27 +164,56 @@ button { font-family: inherit; cursor: pointer; }
   pointer-events: none;
   overflow: hidden;
 }
+/* Tres capas anidadas porque cada una anima el transform por separado:
+   caída+rebote (afuera), giro (medio) y achatado del impacto (adentro). */
 .rain-ball {
   position: absolute;
   top: 0;
   width: var(--size, 40px);
   height: var(--size, 40px);
+  /* Piso: justo sobre el borde inferior de la pantalla */
+  --ground: calc(100vh - var(--size, 40px) - 8px);
   will-change: transform;
-  animation: ballFall var(--dur, 2.8s) cubic-bezier(.45, .05, .75, .6) var(--delay, 0s) forwards;
+  animation: wcFall var(--dur, 3.4s) linear var(--delay, 0s) forwards;
+}
+.rb-spin {
+  width: 100%; height: 100%;
+  animation: wcSpin var(--dur, 3.4s) cubic-bezier(.25, .6, .3, 1) var(--delay, 0s) forwards;
+}
+.rb-squash {
+  width: 100%; height: 100%;
+  transform-origin: 50% 100%; /* se achata contra el piso, no en el centro */
+  animation: wcSquash var(--dur, 3.4s) linear var(--delay, 0s) forwards;
 }
 .rain-ball svg { width: 100%; height: 100%; display: block; filter: drop-shadow(0 6px 10px rgba(13,27,48,.28)); }
-@keyframes ballFall {
-  from { transform: translate3d(0, -20vh, 0) rotate(0deg); }
-  to   { transform: translate3d(var(--drift, 0px), 115vh, 0) rotate(var(--spin, 540deg)); }
+
+/* Cae, pica fuerte, y va perdiendo altura en cada rebote */
+@keyframes wcFall {
+  0%   { transform: translate3d(0, -25vh, 0); animation-timing-function: cubic-bezier(.55, .05, .95, .4); }
+  38%  { transform: translate3d(calc(var(--drift, 0px) * .35), var(--ground), 0); animation-timing-function: cubic-bezier(.15, .6, .35, 1); }
+  54%  { transform: translate3d(calc(var(--drift, 0px) * .6), calc(var(--ground) - 26vh), 0); animation-timing-function: cubic-bezier(.55, .05, .95, .4); }
+  70%  { transform: translate3d(calc(var(--drift, 0px) * .8), var(--ground), 0); animation-timing-function: cubic-bezier(.15, .6, .35, 1); }
+  82%  { transform: translate3d(calc(var(--drift, 0px) * .92), calc(var(--ground) - 9vh), 0); animation-timing-function: cubic-bezier(.55, .05, .95, .4); }
+  92%  { transform: translate3d(var(--drift, 0px), var(--ground), 0); }
+  100% { transform: translate3d(var(--drift, 0px), var(--ground), 0); opacity: 0; }
+}
+/* El giro se frena a medida que la pelota pierde energía */
+@keyframes wcSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(var(--spin, 540deg)); }
+}
+/* Achatado en cada impacto: fuerte el primero, casi nada el último */
+@keyframes wcSquash {
+  0%, 36%   { transform: scale(1, 1); }
+  39%       { transform: scale(1.2, .78); }
+  44%, 68%  { transform: scale(1, 1); }
+  71%       { transform: scale(1.12, .88); }
+  76%, 90%  { transform: scale(1, 1); }
+  92.5%     { transform: scale(1.06, .94); }
+  96%, 100% { transform: scale(1, 1); }
 }
 
 /* ---------------- Podio de goleadores ---------------- */
-.podium-hint {
-  text-align: center;
-  font-size: 12.5px;
-  color: var(--text-dim);
-  margin: 18px 0 0;
-}
 .podium-place:focus-visible {
   outline: 3px solid var(--gold);
   outline-offset: 4px;

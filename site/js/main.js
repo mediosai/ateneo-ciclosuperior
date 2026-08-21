@@ -388,8 +388,7 @@ async function loadScorers() {
           </div>
         </div>`;
       }).join('')}
-    </div>
-    <p class="podium-hint">Tocá a cada goleador y mirá caer una pelota por cada gol.</p>`;
+    </div>`;
 
   el.querySelectorAll('.podium-place').forEach(place => {
     const activar = () => {
@@ -406,9 +405,42 @@ async function loadScorers() {
 }
 
 /* ============================================================
-   Lluvia de pelotas: una por cada gol del jugador tocado
+   Lluvia de pelotas: una por cada gol del jugador tocado.
+   Cada una es un modelo distinto de pelota mundialista.
    ============================================================ */
+const PELOTAS_MUNDIALES = ['wc2002', 'wc2006', 'wc2010', 'wc2014', 'wc2018', 'wc2022', 'wc2026'];
 const MAX_PELOTAS = 30; // tope de seguridad: no tiene sentido animar más
+
+// Baraja una copia (Fisher-Yates), sin tocar el original
+function barajar(lista) {
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
+// Devuelve `cantidad` modelos al azar sin repetir. Si se piden más
+// modelos que los que existen, se rebaraja para que igual no caigan
+// dos iguales seguidas.
+function modelosSinRepetir(cantidad) {
+  const elegidas = [];
+  let mazo = [];
+  while (elegidas.length < cantidad) {
+    if (!mazo.length) {
+      mazo = barajar(PELOTAS_MUNDIALES);
+      // Al rebarajar, evitamos que la última repetida caiga pegada a
+      // la anterior: si coincide, la mandamos al fondo del mazo.
+      const ultima = elegidas[elegidas.length - 1];
+      if (mazo.length > 1 && mazo[mazo.length - 1] === ultima) {
+        mazo.unshift(mazo.pop());
+      }
+    }
+    elegidas.push(mazo.pop());
+  }
+  return elegidas;
+}
 
 function lloverPelotas(goles) {
   const capa = document.getElementById('ballRain');
@@ -421,20 +453,25 @@ function lloverPelotas(goles) {
   capa.replaceChildren();
 
   const cantidad = Math.min(goles, MAX_PELOTAS);
+  const modelos = modelosSinRepetir(cantidad);
   const azar = (min, max) => min + Math.random() * (max - min);
 
   for (let i = 0; i < cantidad; i++) {
+    const tam = Math.round(azar(30, 46));
     const pelota = document.createElement('div');
     pelota.className = 'rain-ball';
     // Repartidas a lo ancho, con algo de azar para que no queden en fila
-    const carril = (i + 0.5) / cantidad;
-    pelota.style.left = `calc(${(carril * 100).toFixed(1)}% - 20px)`;
-    pelota.style.setProperty('--size', `${azar(28, 46).toFixed(0)}px`);
-    pelota.style.setProperty('--dur', `${azar(2.2, 3.4).toFixed(2)}s`);
-    pelota.style.setProperty('--delay', `${azar(0, 0.9).toFixed(2)}s`);
-    pelota.style.setProperty('--drift', `${azar(-60, 60).toFixed(0)}px`);
-    pelota.style.setProperty('--spin', `${azar(-720, 720).toFixed(0)}deg`);
-    pelota.innerHTML = `<svg viewBox="-30 -30 60 60"><use href="#ateneoBall" /></svg>`;
+    const carril = (i + azar(0.25, 0.75)) / cantidad;
+    pelota.style.left = `calc(${(carril * 100).toFixed(1)}% - ${tam / 2}px)`;
+    pelota.style.setProperty('--size', `${tam}px`);
+    pelota.style.setProperty('--dur', `${azar(3.1, 4.1).toFixed(2)}s`);
+    pelota.style.setProperty('--delay', `${azar(0, 0.8).toFixed(2)}s`);
+    pelota.style.setProperty('--drift', `${azar(-50, 50).toFixed(0)}px`);
+    pelota.style.setProperty('--spin', `${azar(-540, 540).toFixed(0)}deg`);
+    pelota.innerHTML =
+      `<div class="rb-spin"><div class="rb-squash">` +
+      `<svg viewBox="-30 -30 60 60"><use href="#${modelos[i]}" /></svg>` +
+      `</div></div>`;
     pelota.addEventListener('animationend', () => pelota.remove());
     capa.appendChild(pelota);
   }
